@@ -1,0 +1,24 @@
+
+
+def newAccountMode():
+    return (destIP,destPort,messageJSON)
+
+
+
+def depositMode():
+    return
+
+
+
+def createCardMode():
+    return
+
+
+
+def getBalanceMode():
+    return
+
+
+
+def withrawMode():
+    return
