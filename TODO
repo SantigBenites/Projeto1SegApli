@@ -1,0 +1,29 @@
+TODO
+
+Bank
+
+-p <bk-port>: The port that bank should listen on. The default is 3000
+-s <auth-file>: Name of the auth file. If not supplied, defaults to bank.auth
+
+MBec
+
+Options
+
+-a <account>: The customer's bank account name. The format of the account is a number, e.g., 55555.
+-s <auth-file>: The authentication file that bank creates for the mbec and store. If -s is not specified, the default filename is bank.auth (in the current working directory). If the specified file cannot be opened or is invalid, the mbec exits with a return code of 130.
+-i <ip-bank-address>: The IP address that bank is running on. The default value is 127.0.0.1.
+-p <bk-port>: The TCP port that bank is listening on. The default is 3000
+-p <st-port>: The TCP port that store is listening on. The default is 5000.
+-v <virtual-credit-card-file>: The customer's mbec vcc file generated. The default value is the account name concatenated with a sequential number and prepended to .card (<account_seqNumber>.card). For example, if the account name was 55555 and the sequential number was 2, the default vvc file is 55555_2.card
+
+Operation Modes
+-n <balance> : Create a new account with the given balance.
+-d <amount>: Deposit the amount of money specified.
+-c <amount>: creates a virtual credit card with the amount of money specified
+-g : Get the current balance of the account.
+-m <shopping-value> : Withdraw the amount of money specified from the virtual credit card and the bank account.
+
+Store
+
+p <st-port>: The port that store should listen on. The default is 5000
+-s <auth-file>: Name of the auth file. If not supplied, defaults to bank.auth

@@ -1,0 +1,5 @@
+# Ignore Bin
+bin/*
+
+# Ignore Shell Script
+src/run.sh
