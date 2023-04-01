@@ -9,3 +9,12 @@ def receiveConnection(host="127.0.0.1",port=3000):
         print(f"Connected by {addr}")
 
     return (conn,addr)
+
+
+def receiveMessage(connection:socket):
+
+    return connection.recv(1024)
+
+def sendMessage(connection:socket,data):
+
+    connection.sendall(data)
