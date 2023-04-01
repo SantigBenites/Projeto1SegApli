@@ -1,5 +1,8 @@
-# Ignore Bin
+# Ignore Bin Files
 bin/*
+
+# Keep Bin
+!bin
 
 # Ignore Shell Script
 src/run.sh
