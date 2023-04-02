@@ -6,7 +6,7 @@ from utils import safe_execute
 
 loopBool = True
 
-def main(argv:list[str]):
+def main(argv:"list[str]"):
     
 
     # Signals
@@ -30,9 +30,15 @@ def main(argv:list[str]):
 
             message = json.loads(message.decode('utf8'))
 
-            if message["MessageType"] == "NewAccount":
-                response = newAccountMode(message)
-                sendMessage(conn,response)
+            match message["MessageType"]:
+                case "NewAccount":
+                    response = newAccountMode(message)
+                    sendMessage(conn,response)
+                case "Deposit":
+                    response = depositMode(message)
+                    sendMessage(conn, response)
+                case "Balance":
+                    return
 
             conn.close()
     except KeyboardInterrupt:
