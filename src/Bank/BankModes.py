@@ -39,7 +39,7 @@ def depositMode(message):
     #nedds to verify the userFile corresponds to account
     if(os.path.isfile(f"{current_working_directory}/src/Bank/users/{account}.user")):
         storage.addAccountBalance(account,deposit)
-        response = json.dumps({"account":account, "balance":storage.getAccountBalance(account)}).encode('utf8')
+        response = json.dumps({"account":account, "deposit":storage.getAccountBalance(account)}).encode('utf8')
     else:
         response = json.dumps({"Error":130}).encode('utf8')
 
@@ -94,8 +94,11 @@ def getBalanceMode(message):
     account = message["account"]
     
     storage = BankStorageSingleton()
-    
-    response = json.dumps({"account": account, "balance": storage.getAccountBalance(account)})
+    if(os.path.isfile(f"{current_working_directory}/src/Bank/users/{account}.user")):
+        response = json.dumps({"account": account, "balance": storage.getAccountBalance(account)})
+        
+    else:
+        message = json.dumps({"Error":130})
     
     return response.encode('utf8')
     

@@ -20,8 +20,8 @@ def newAccountMode(argv:list[str]):
     userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.user"
     
     # Verify if balance is in argv and if is a int
-    if "-n" in argv and safe_execute("error",TypeError,int,argv[argv.index("-n")+1]) != "error":
-        balance = int(argv[argv.index("-n")+1])
+    if "-n" in argv and safe_execute("error",TypeError,float,argv[argv.index("-n")+1]) != "error":
+        balance = float(argv[argv.index("-n")+1])
     else:
         return 130
 
@@ -70,8 +70,8 @@ def depositMode(argv:list[str]):
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
 
     # Verify if amount is in argv and if is a int
-    if "-d" in argv and safe_execute("error",TypeError,int,argv[argv.index("-d")+1]) != "error":
-        amount = int(argv[argv.index("-d") + 1])
+    if "-d" in argv and safe_execute("error",TypeError,float,argv[argv.index("-d")+1]) != "error":
+        amount = float(argv[argv.index("-d") + 1])
     else:
         return 130
     
@@ -85,12 +85,11 @@ def depositMode(argv:list[str]):
 
 
     m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
-    print(m)
     
     receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
     print(receivedMessage)
     
-    if "account" in receivedMessage and "balance" in receivedMessage:
+    if "account" in receivedMessage and "deposit" in receivedMessage:
         return receivedMessage
         
     else:
@@ -110,8 +109,8 @@ def createCardMode(argv:list[str]):
     userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.user"
 
     # Verify if amount is in argv and if is a int
-    if "-c" in argv and safe_execute("error",TypeError,int,argv[argv.index("-c")+1]) != "error":
-        amount = int(argv[argv.index("-c")+1])
+    if "-c" in argv and safe_execute("error",TypeError,float,argv[argv.index("-c")+1]) != "error":
+        amount = float(argv[argv.index("-c")+1])
     else:
         return 130
 
