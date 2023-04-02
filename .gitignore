@@ -21,3 +21,5 @@ src/MBec/usersFiles/*
 src/Bank/__pycache__/*
 src/MBec/__pycache__/*
 src/Store/__pycache__/*
+out.txt
+src/tests.py
