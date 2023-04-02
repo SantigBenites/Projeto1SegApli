@@ -6,3 +6,8 @@ bin/*
 
 # Ignore Shell Script
 src/run.sh
+
+# Ignore UserFiles
+src/Bank/users/*
+
+src/MBec/usersFiles/*

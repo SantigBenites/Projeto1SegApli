@@ -1,14 +1,19 @@
 import socket
 
-def receiveConnection(host="127.0.0.1",port=3000):
+def createSocket(host="127.0.0.1",port=3000):
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((host, port))
-        s.listen()
-        conn, addr = s.accept()
-        print(f"Connected by {addr}")
+    s = socket.socket()
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind((host, port))
+    s.listen()
+    return s
 
+def receiveNewConnection(socket:socket.socket):
+
+    socket.listen()
+    conn, addr = socket.accept()    
     return (conn,addr)
+
 
 
 def receiveMessage(connection:socket):

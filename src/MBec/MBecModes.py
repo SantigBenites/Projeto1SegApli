@@ -1,7 +1,8 @@
-import sys, socket
+import sys, socket, json, os
 from utils import safe_execute
 from MBecConnection import sendMessage
-import json
+
+current_working_directory = os.getcwd()
 
 def newAccountMode(argv:list[str]):
 
@@ -24,7 +25,7 @@ def newAccountMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage)
     returnMessage = json.loads(messageEncode.decode('utf8'))
     if returnMessage["MessageType"] == 0:
-        userFile = open(f"usersFiles/{userFile}", "a")
+        userFile = open(f"{current_working_directory}/src/MBec/usersFiles/{userFile}.user", "a")
         PIN = returnMessage["PIN"]
         userFile.write(f"{account}:{PIN}")
         userFile.close()

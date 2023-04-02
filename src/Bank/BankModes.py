@@ -1,6 +1,6 @@
-import os
-import random
-import json
+import os, random, json
+
+current_working_directory = os.getcwd()
 
 def newAccountMode(message):
 
@@ -10,7 +10,7 @@ def newAccountMode(message):
         return json.dumps({ "MessageType":1}).encode('utf8')
 
     PIN = random.randrange(99999,999999)
-    userFile = open(f"users/{accountName}.user", "a")
+    userFile = open(f"{current_working_directory}/src/Bank/users/{accountName}.user", "a")
     userFile.write(f"{accountName}:{PIN}")
     userFile.close()
 
