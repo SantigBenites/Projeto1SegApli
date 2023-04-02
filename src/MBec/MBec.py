@@ -1,5 +1,5 @@
 import socket, sys, getopt, signal
-from utils import safe_execute
+from utils import *
 from MBecModes import newAccountMode, depositMode, createCardMode, getBalanceMode, withrawMode
 
 def main(argv:list[str]):
@@ -17,6 +17,8 @@ def main(argv:list[str]):
         messageDict = withrawMode(argv)
     else:
         sys.exit(1)
+
+    print(messageDict)
     
 
 

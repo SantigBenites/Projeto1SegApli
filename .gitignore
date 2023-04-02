@@ -10,6 +10,8 @@ src/run.sh
 # Ignore UserFiles
 !src/Bank/users
 src/Bank/users/*
+!src/Bank/creditCards
+src/Bank/creditCards/*
 !src/MBec/usersFiles
 src/MBec/usersFiles/*
 

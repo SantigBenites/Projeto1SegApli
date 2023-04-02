@@ -3,31 +3,46 @@
 class BankStorageSingleton(object):
   
     users = {}
+    cards = {}
+    balances = {}
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
           cls.instance = super(BankStorageSingleton, cls).__new__(cls)
         return cls.instance
    
-    def newAccount(self,account:str,balance:int):
-        print("newAcount")
+    def newAccount(self,account:str,userFilePath:int):
         storage = BankStorageSingleton()
         if account not in storage.users.keys():
-            print(f"new account {account}:{balance}")
-            storage.users[account] = balance
-            print(storage.users)
+            storage.users[account] = userFilePath
         else:
             print(storage.users)
             return
-        
-    def deposite(self,account:str, deposit: int):
-        print("deposit")
+
+    def getAccountBalance(self,account:str):
         storage = BankStorageSingleton()
-        print(storage.users)
-        if account in storage.users.keys():
-            storage.users[account] = storage.users[account] + deposit
-            print(storage.users)
-            return 1
-        return -1
-            
+        if account in storage.balances.keys():
+            return storage.balances[account]
+        else:
+            return
+
+    def addAccountBalance(self,account:str,balance:int):
+        storage = BankStorageSingleton()
+        if account in storage.balances.keys():
+            storage.balances[account] += balance
+        else:
+            storage.balances[account] = balance
+
+    def getCreditCardNumber(self,account:str):
+        storage = BankStorageSingleton()
+        if account in storage.cards.keys():
+            return len(storage.cards[account])
+        else:
+            return 0
         
+    def addCreditCard(self,account:str,cardPath:str, cardValue:int):
+        storage = BankStorageSingleton()
+        if account in storage.cards.keys():
+            storage.cards[account].append((cardPath,cardValue))
+        else:
+            storage.cards[account] = [(cardPath,cardValue)]
