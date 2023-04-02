@@ -14,7 +14,7 @@ def main(argv:list[str]):
 
     # Processing Arguments
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
-    portNumber = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
+    portNumber = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 3000
     authFile = argv[argv.index("-s")+1] if "-s" in argv else "bank.auth"
     socket = createSocket(port=portNumber)
     

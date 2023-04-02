@@ -48,9 +48,13 @@ def stringToArgs(argsString:str):
                 args[-1] += char
 
     return args
+
+def argsAreValidIntegers(args:list[str]):
+
+    for str in args:
+
+        if safe_execute("error",TypeError,int,str) != "error":
+            return
+
+    return 123
         
-
-
-str = "-s bank.auth-u55555.user-a55555-n1000.00"
-
-print(stringToArgs(str))

@@ -16,11 +16,11 @@ def newAccountMode(argv:list[str]):
     authFile = argv[argv.index("-s")+1] if "-s" in argv else "bank.auth"
     ipBankAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
-    bkPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
+    bkPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 3000
     userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.user"
     
     # Verify if balance is in argv and if is a int
-    if "-n" in argv and safe_execute(0,TypeError,int,argv[argv.index("-n")+1]) != 0:
+    if "-n" in argv and safe_execute("error",TypeError,int,argv[argv.index("-n")+1]) != "error":
         balance = int(argv[argv.index("-n")+1])
     else:
         return 130
@@ -70,7 +70,7 @@ def depositMode(argv:list[str]):
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
 
     # Verify if amount is in argv and if is a int
-    if "-d" in argv and safe_execute(0,TypeError,int,argv[argv.index("-d")+1]) != 0:
+    if "-d" in argv and safe_execute("error",TypeError,int,argv[argv.index("-d")+1]) != "error":
         amount = int(argv[argv.index("-d") + 1])
     else:
         return 130
@@ -105,12 +105,12 @@ def createCardMode(argv:list[str]):
     authFile = argv[argv.index("-s")+1] if "-s" in argv else "bank.auth"
     ipBankAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
-    bkPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
+    bkPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 3000
     account = argv[argv.index("-a")+1] if "-a" in argv else sys.exit(0)
     userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.user"
 
     # Verify if amount is in argv and if is a int
-    if "-c" in argv and safe_execute(0,TypeError,int,argv[argv.index("-c")+1]) != 0:
+    if "-c" in argv and safe_execute("error",TypeError,int,argv[argv.index("-c")+1]) != "error":
         amount = int(argv[argv.index("-c")+1])
     else:
         return 130
@@ -178,7 +178,7 @@ def withdrawMode(argv:list[str]):
     # Terminal line inputs
     ipStoreAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 5000
-    stPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
+    stPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 3000
 
     # Verify the virtual credit card file
     if "-v" in argv:
@@ -187,7 +187,7 @@ def withdrawMode(argv:list[str]):
         return 130
 
     # 
-    if "-m" in argv and safe_execute(0,TypeError,int,argv[argv.index("-m")+1]) != 0:
+    if "-m" in argv and safe_execute("error",TypeError,int,argv[argv.index("-m")+1]) != "error":
         shoppingValue = int(argv[argv.index("-m")+1])
     else:
         return 130
