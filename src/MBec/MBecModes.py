@@ -6,19 +6,28 @@ current_working_directory = os.getcwd()
 
 def newAccountMode(argv:list[str]):
 
+    # Verify if account is in argv
+    if "-a" in argv:
+        account = argv[argv.index("-a")+1]
+    else: 
+        return 130
+    
     # Terminal line inputs
-    account = argv[argv.index("-a")+1] if "-a" in argv else sys.exit(0)
     authFile = argv[argv.index("-s")+1] if "-s" in argv else "bank.auth"
     ipBankAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
     bkPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
     userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.user"
-    balanceStr = argv[argv.index("-n")+1] if "-n" in argv else sys.exit(1)
-    balance = int(balanceStr) if safe_execute(0,TypeError,int,balanceStr) != 0 else sys.exit(1)
+    
+    # Verify if balance is in argv and if is a int
+    if "-n" in argv and safe_execute(0,TypeError,int,argv[argv.index("-n")+1]) != 0:
+        balance = int(argv[argv.index("-n")+1])
+    else:
+        return 130
 
     # Check if initial balance is above 15
     if balance < 15:
-        return
+        return 130
 
     # Generate message
     newAccountMessage = json.dumps({
@@ -42,28 +51,37 @@ def newAccountMode(argv:list[str]):
     else:
 
         # Error from Bank
-        print(f"Error num {returnMessage['Error']}")
-        sys.exit(1)
+        return 130
 
 
 
 def depositMode(argv:list[str]):
     
-    account = argv[argv.index("-a")+1] if "-a" in argv else exit(1)
+    # Verify if account is in argv
+    if "-a" in argv:
+        account = argv[argv.index("-a")+1]
+    else: 
+        return 130
+    
     # it must be the same file produced by mbec when the account was created
     userFile = argv[argv.index("-u") + 1] if "-u" in argv else f"{account}.user"
     ipBankAddress = argv[argv.index("-i") + 1] if "-i" in argv else "127.0.0.1"
     bkPort = int(argv[argv.index("-p") + 1]) if "-p" in argv else 3000
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
-    amount = int(argv[argv.index("-d") + 1]) if "-d" in argv else exit(1)
+
+    # Verify if amount is in argv and if is a int
+    if "-d" in argv and safe_execute(0,TypeError,int,argv[argv.index("-d")+1]) != 0:
+        amount = int(argv[argv.index("-d") + 1])
+    else:
+        return 130
     
     if(amount <= 0): 
         print ("Invalid Amount") 
-        exit (1)
+        return 130
         
     if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
         print(f"Error num 130")
-        sys.exit(1)
+        return 130
 
 
     m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
@@ -77,8 +95,7 @@ def depositMode(argv:list[str]):
         
     else:
         print("Error")
-        exit(1)
-    return
+        return 130
 
 
 # mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -c <amount>
@@ -91,18 +108,20 @@ def createCardMode(argv:list[str]):
     bkPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
     account = argv[argv.index("-a")+1] if "-a" in argv else sys.exit(0)
     userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.user"
-    amountStr = argv[argv.index("-c")+1] if "-c" in argv else sys.exit(1)
-    amount = int(amountStr) if safe_execute(0,TypeError,int,amountStr) != 0 else sys.exit(1)
+
+    # Verify if amount is in argv and if is a int
+    if "-c" in argv and safe_execute(0,TypeError,int,argv[argv.index("-c")+1]) != 0:
+        amount = int(argv[argv.index("-c")+1])
+    else:
+        return 130
 
     # Check if user file already exists
     if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
-        print(f"Error num 130")
-        sys.exit(1)
+        return 130
 
     # Check if credit card initial amount is above 0
     if amount <= 0:
-        print(f"Error num 130")
-        sys.exit(1)
+        return 130
 
     # Generate message
     newCardMessage = json.dumps({
@@ -117,22 +136,22 @@ def createCardMode(argv:list[str]):
 
     # Check if Bank response is valid or Error 
     if "account" and "vcc_amount" and "vcc_file" in returnMessage:
-
         # Valid message
         return returnMessage
     else:
-
         # Error from Bank
-        print(f"Error num {returnMessage['Error']}")
-        sys.exit(1)
-
-    return
+        return 130
 
 
 # mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -g
 def getBalanceMode(argv:list[str]):
     
-    account = argv[argv.index("-a")+1] if "-a" in argv else exit(1)
+    # Verify if account is in argv
+    if "-a" in argv:
+        account = argv[argv.index("-a")+1]
+    else: 
+        return 130
+    
     # it must be the same file produced by mbec when the account was created
     userFile = argv[argv.index("-u") + 1] if "-u" in argv else f"{account}.user"
     ipBankAddress = argv[argv.index("-i") + 1] if "-i" in argv else "127.0.0.1"
@@ -140,8 +159,7 @@ def getBalanceMode(argv:list[str]):
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
     
     if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
-        print(f"Error num 130")
-        sys.exit(1)
+        return 130
         
     m = json.dumps({"MessageType": "Balance", "account":account})
     
@@ -150,8 +168,7 @@ def getBalanceMode(argv:list[str]):
     if "account" in receivedMessage and "balance" in receivedMessage:
         return receivedMessage
     else:
-        print("Error")
-        exit(1)
+        return 130
 
 
 
@@ -162,14 +179,22 @@ def withdrawMode(argv:list[str]):
     ipStoreAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 5000
     stPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
-    virtualCreditCardFile = argv[argv.index("-v")+1] if "-v" in argv else sys.exit(0)
-    shoppingValueStr = argv[argv.index("-m")+1] if "-m" in argv else sys.exit(1)
-    shoppingValue = int(shoppingValueStr) if safe_execute(0,TypeError,int,shoppingValueStr) != 0 else sys.exit(1)
+
+    # Verify the virtual credit card file
+    if "-v" in argv:
+        virtualCreditCardFile = argv[argv.index("-v")+1]
+    else:
+        return 130
+
+    # 
+    if "-m" in argv and safe_execute(0,TypeError,int,argv[argv.index("-m")+1]) != 0:
+        shoppingValue = int(argv[argv.index("-m")+1])
+    else:
+        return 130
 
     # Check if the withdrawn amount is above 0
     if shoppingValue <= 0:
-        print(f"Error num 132")
-        sys.exit(1)
+        return 130
 
     # Generate message
     withdrawCard = json.dumps({

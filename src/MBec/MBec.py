@@ -18,7 +18,12 @@ def main(argv:list[str]):
     else:
         sys.exit(1)
 
+    if safe_execute(0,TypeError,int,argv[argv.index("-c")+1]) == 0:
+        
+        return int(messageDict)
+
     print(messageDict)
+    return 0
     
 
 
