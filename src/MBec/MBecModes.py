@@ -59,9 +59,12 @@ def depositMode(argv:list[str]):
     receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
     print(receivedMessage)
     
-    if receivedMessage["MessageType"] == 0:
-        print("Deposit Made")
+    if "account" in receivedMessage and "balance" in receivedMessage:
+        return receivedMessage
         
+    else:
+        print("Error")
+        exit(1)
     return
 
 
@@ -112,16 +115,18 @@ def getBalanceMode(argv:list[str]):
     bkPort = int(argv[argv.index("-p") + 1]) if "-p" in argv else 3000
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
     
-    m = json.dumps({"MessageType": "Balance", "account":account,"userFile":userFile})
+    m = json.dumps({"MessageType": "Balance", "account":account})
     print(m)
     
     receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
     print(receivedMessage)
     
-    if receivedMessage["MessageType"] == 0:
-        print(f'Balance: {receivedMessage["Balance"] }')
-    
-    return
+    if "account" in receivedMessage and "balance" in receivedMessage:
+        return receivedMessage
+    else:
+        print("Error")
+        exit(1)
+
 
 
 

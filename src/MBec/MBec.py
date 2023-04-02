@@ -11,7 +11,7 @@ def main(argv:list[str]):
         messageDict = depositMode(argv)
     elif "-c" in argv:
         messageDict = createCardMode(argv)
-    elif "g" in argv:
+    elif "-g" in argv:
         messageDict = getBalanceMode(argv)
     elif "-m"in argv:
         messageDict = withrawMode(argv)

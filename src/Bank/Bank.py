@@ -36,8 +36,10 @@ def main(argv:"list[str]"):
                     response = depositMode(message)
                     sendMessage(conn, response)
                 case "Balance":
-                    return
-
+                    response = getBalanceMode(message)
+                    sendMessage(conn, response)
+                    
+                
             
             if message["MessageType"] == "CreateCard":
                 response = createCardMode(message)
