@@ -116,10 +116,8 @@ def getBalanceMode(argv:list[str]):
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
     
     m = json.dumps({"MessageType": "Balance", "account":account})
-    print(m)
     
     receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
-    print(receivedMessage)
     
     if "account" in receivedMessage and "balance" in receivedMessage:
         return receivedMessage
