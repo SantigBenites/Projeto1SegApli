@@ -26,18 +26,18 @@ def main(argv:list[str]):
 
             (conn,addr) = receiveNewConnection(socket)
             message = receiveMessage(conn)
-            print(message)
-
             message = json.loads(message.decode('utf8'))
 
             if message["MessageType"] == "NewAccount":
                 response = newAccountMode(message)
                 sendMessage(conn,response)
 
+
+            print(response)
             conn.close()
     except KeyboardInterrupt:
         print("Ended Properly")
-        print(f"storage \n {storage.users}")
+        print(f"Storage: \n {storage.users}")
         conn.close()
         sys.exit()
 

@@ -9,10 +9,9 @@ class BankStorageSingleton(object):
           cls.instance = super(BankStorageSingleton, cls).__new__(cls)
         return cls.instance
    
-    def newAccount(self,account:str,balance:int):
+    def newAccount(self,account:str,userFilePath:int):
         storage = BankStorageSingleton()
         if account not in storage.users.keys():
-            print(f"new account {account}:{balance}")
-            storage.users[account] = balance
+            storage.users[account] = userFilePath
         else:
             return

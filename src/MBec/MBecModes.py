@@ -27,13 +27,13 @@ def newAccountMode(argv:list[str]):
 
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage)
     returnMessage = json.loads(messageEncode.decode('utf8'))
-    if returnMessage["MessageType"] == 0:
+    if "account" in returnMessage and "initial_balance" in returnMessage:
         userFile = open(f"{current_working_directory}/src/MBec/usersFiles/{userFile}", "a")
-        PIN = returnMessage["PIN"]
-        userFile.write(f"{account}:{PIN}")
         userFile.close()
-        return
+
+        return returnMessage
     else:
+        print(f"Error num {returnMessage['Error']}")
         sys.exit(1)
 
 
@@ -42,8 +42,19 @@ def depositMode():
     return
 
 
+# mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -c <amount>
+def createCardMode(argv:list[str]):
 
-def createCardMode():
+    authFile = argv[argv.index("-s")+1] if "-s" in argv else "bank.auth"
+    ipBankAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
+    portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
+    bkPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
+    userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.auth"
+    account = argv[argv.index("-a")+1] if "-a" in argv else sys.exit(0)
+    amountStr = argv[argv.index("-c")+1] if "-c" in argv else sys.exit(1)
+    amount = int(amountStr) if safe_execute(0,TypeError,int,amountStr) != 0 else sys.exit(1)
+
+
     return
 
 

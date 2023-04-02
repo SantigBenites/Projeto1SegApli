@@ -10,21 +10,20 @@ def newAccountMode(message):
     balance = message["balance"]
 
     if os.path.isfile(f"{current_working_directory}/src/Bank/users/{accountName}.user"):
-        return json.dumps({ "MessageType":1}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
 
-    PIN = random.randrange(99999,999999)
-    userFile = open(f"{current_working_directory}/src/Bank/users/{accountName}.user", "a")
-    userFile.write(f"{accountName}:{PIN}")
+    userPath = f"{current_working_directory}/src/Bank/users/{accountName}.user"
+    userFile = open(userPath, "a")
     userFile.close()
 
-    newAccountReponse = json.dumps({
-        "MessageType":0,
-        "PIN":PIN
+    newAccountResponse = json.dumps({
+        "account":accountName,
+        "initial_balance":balance
     }).encode('utf8')
 
-    storage.newAccount(accountName,balance)
+    storage.newAccount(accountName,userPath)
 
-    return newAccountReponse
+    return newAccountResponse
 
 
 def depositMode():
