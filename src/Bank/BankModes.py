@@ -132,6 +132,7 @@ def withdrawMode(message):
     
     if account == accountInput and amount >= shoppingValue:
         storage.updateCreditCardBalance(account,cardPath, amount-shoppingValue)
+        storage.addAccountBalance(account,-shoppingValue)
         message = json.dumps({"vcc_file": virtualCreditCardFile , "vcc_amount_used": shoppingValue})
 
     else:
