@@ -8,8 +8,9 @@ bin/*
 src/run.sh
 
 # Ignore UserFiles
+!src/Bank/users
 src/Bank/users/*
-
+!src/MBec/usersFiles
 src/MBec/usersFiles/*
 
 # Ignore pychache
