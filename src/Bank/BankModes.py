@@ -57,12 +57,14 @@ def createCardMode(message):
     r = re.compile("55555_\d+.card")
     matches = list(filter(r.match, creditCards))
     if len(matches) > 0:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":133}).encode('utf8')
     
     # Checking for account balance
     accountBalance = storage.getAccountBalance(accountName)
     if amount > accountBalance:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":134}).encode('utf8')
+    
+    # Check for other active credit cards
 
     # Getting card name
     numberOfCardForAccount = storage.getCreditCardNumber(accountName) + 1
@@ -71,6 +73,7 @@ def createCardMode(message):
     # Creating credit card file
     cardPath = f"{current_working_directory}/src/Bank/creditCards/{cardName}.card"
     cardFile = open(cardPath, "a")
+    cardFile.write(accountName)
     cardFile.close()
 
     # Generating response

@@ -1,6 +1,6 @@
 import socket, sys, getopt, signal
 from utils import *
-from MBecModes import newAccountMode, depositMode, createCardMode, getBalanceMode, withrawMode
+from MBecModes import newAccountMode, depositMode, createCardMode, getBalanceMode, withdrawMode
 
 def main(argv:list[str]):
 
@@ -14,7 +14,7 @@ def main(argv:list[str]):
     elif "-g" in argv:
         messageDict = getBalanceMode(argv)
     elif "-m"in argv:
-        messageDict = withrawMode(argv)
+        messageDict = withdrawMode(argv)
     else:
         sys.exit(1)
 

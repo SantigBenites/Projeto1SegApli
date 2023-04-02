@@ -1,6 +1,7 @@
 import os
 directories = ["src/Bank/users",
-        "src/MBec/usersFiles"]
+        "src/MBec/usersFiles",
+        "src/Bank/creditCards"]
 
 for dir in directories:
     for f in os.listdir(dir):
