@@ -32,6 +32,10 @@ def main(argv:list[str]):
                 response = newAccountMode(message)
                 sendMessage(conn,response)
 
+            
+            if message["MessageType"] == "CreateCard":
+                response = createCardMode(message)
+                sendMessage(conn,response)
 
             print(response)
             conn.close()
