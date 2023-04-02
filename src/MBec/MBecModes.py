@@ -85,10 +85,8 @@ def depositMode(argv:list[str]):
 
 
     m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
-    print(m)
     
     receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
-    print(receivedMessage)
     
     if "account" in receivedMessage and "balance" in receivedMessage:
         return receivedMessage

@@ -18,9 +18,11 @@ def main(argv:list[str]):
     else:
         sys.exit(1)
 
-    if safe_execute("error",TypeError,int,messageDict) == "error":
+    if safe_execute("error",TypeError,int,messageDict) != "error":
         
         return int(messageDict)
+    
+    print(messageDict)
 
     return 0
     

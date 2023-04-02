@@ -1,4 +1,4 @@
-import json
+import json, re
 
 def safe_execute(default, exception, function, *args):
     """This function tries to use function with the *args and if it fails with exception returns default
@@ -26,7 +26,7 @@ def dictToJSON(dict:dict):
 
 def stringToArgs(argsString:str):
 
-    if len(argsString > 4096):
+    if len(argsString) > 4096:
         return 130
 
     sanitized = argsString.replace(" ","")
@@ -34,7 +34,6 @@ def stringToArgs(argsString:str):
     args = []
 
     for char in sanitized:
-        print(char)
         if flagBool:
             args[-1] += char
             flagBool = False
@@ -49,12 +48,30 @@ def stringToArgs(argsString:str):
 
     return args
 
-def argsAreValidIntegers(args:list[str]):
-
-    for str in args:
-
-        if safe_execute("error",TypeError,int,str) != "error":
-            return
-
-    return 123
+def argsAreValidIntegers(str:str):
+    return True if re.search("^[1-9]+$", str) else False
         
+def argsAreValidBalances(string:str):
+    validDecimal = True if re.search("^\d+\.[0-9]{2}$",string) else False
+    validInt = False
+    if validDecimal:
+        validInt = 0 < int(re.match("^\d+\.[0-9]{2}$",string).group(0)[:-3]) < 4294967295
+    return validDecimal and validInt
+
+def argsAreValidFileNames(str:str):
+    validSize = 1 < len(str) < 127
+    validChars = True if re.search(".+\.[0-9a-z]+",str) else False
+    notDots = str != "." and str != ".."
+    return validSize and validChars and notDots
+
+def argsAreValidAccountNames(str:str):
+    validSize = 1 < len(str) < 127
+    validChars = True if re.search(".+\.[0-9a-z]+",str) else False
+    return validSize and validChars
+
+def argsAreValidIPv4(str:str):
+    validIPV4 = True if re.search("^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$") else False
+    return validIPV4
+
+def argsAreValidPort(port:int):
+    return 1024 < port < 65535
