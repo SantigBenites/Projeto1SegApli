@@ -92,12 +92,12 @@ def createCardMode(argv:list[str]):
 
     # Check if user file already exists
     if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
-        print(f"Error num 131")
+        print(f"Error num 130")
         sys.exit(1)
 
     # Check if credit card initial amount is above 0
     if amount <= 0:
-        print(f"Error num 132")
+        print(f"Error num 130")
         sys.exit(1)
 
     # Generate message
@@ -151,9 +151,9 @@ def getBalanceMode(argv:list[str]):
 def withdrawMode(argv:list[str]):
 
     # Terminal line inputs
-    ipBankAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
+    ipStoreAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
-    bkPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
+    stPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
     virtualCreditCardFile = argv[argv.index("-v")+1] if "-v" in argv else sys.exit(0)
     shoppingValueStr = argv[argv.index("-m")+1] if "-m" in argv else sys.exit(1)
     shoppingValue = int(shoppingValueStr) if safe_execute(0,TypeError,int,shoppingValueStr) != 0 else sys.exit(1)
@@ -171,8 +171,9 @@ def withdrawMode(argv:list[str]):
     }).encode('utf8')
     
     # Send receive message from Bank
-    messageEncode = sendMessage(ipBankAddress,bkPort,withdrawCard)
+    messageEncode = sendMessage(ipStoreAddress,stPort,withdrawCard)
     returnMessage = json.loads(messageEncode.decode('utf8'))
     
+
 
     return

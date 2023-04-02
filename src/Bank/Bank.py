@@ -38,12 +38,12 @@ def main(argv:"list[str]"):
                 case "Balance":
                     response = getBalanceMode(message)
                     sendMessage(conn, response)
-                    
-                
-            
-            if message["MessageType"] == "CreateCard":
-                response = createCardMode(message)
-                sendMessage(conn,response)
+                case "CreateCard":
+                    response = createCardMode(message)
+                    sendMessage(conn,response)
+                case "WithdrawCard":
+                    response = withdrawMode(message)
+                    sendMessage(conn,response)
 
             print(response)
             conn.close()

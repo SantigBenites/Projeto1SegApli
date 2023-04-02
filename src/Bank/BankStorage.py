@@ -33,6 +33,11 @@ class BankStorageSingleton(object):
         else:
             storage.balances[account] = balance
 
+    def getCreditCardBalance(self,account:str,creditCardPath:str):
+        storage = BankStorageSingleton()
+        card = lambda card : card[0] == creditCardPath ,storage.cards[account]
+        return card[1]
+
     def getCreditCardNumber(self,account:str):
         storage = BankStorageSingleton()
         if account in storage.cards.keys():
@@ -46,3 +51,9 @@ class BankStorageSingleton(object):
             storage.cards[account].append((cardPath,cardValue))
         else:
             storage.cards[account] = [(cardPath,cardValue)]
+
+    def updateCreditCardBalance(self,account:str,creditCardPath:str,balance:int):
+        storage = BankStorageSingleton()
+        new = [(k,v) if (k != account) else (account, v + balance) for (k, v) in storage[account]]
+        storage[account] = new
+        

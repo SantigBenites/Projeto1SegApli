@@ -57,12 +57,12 @@ def createCardMode(message):
     r = re.compile("55555_\d+.card")
     matches = list(filter(r.match, creditCards))
     if len(matches) > 0:
-        return json.dumps({"Error":133}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
     
     # Checking for account balance
     accountBalance = storage.getAccountBalance(accountName)
     if amount > accountBalance:
-        return json.dumps({"Error":134}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
     
     # Check for other active credit cards
 
@@ -101,6 +101,25 @@ def getBalanceMode(message):
     
 
 
-def withrawMode():
+def withdrawMode(message):
+
+    # Get message values
+    virtualCreditCardFile = message["virtualCreditCardFile"]
+    shoppingValue = message["shoppingValue"]
+    storage = BankStorageSingleton()
+
+    # Get account from credit card file
+    if os.path.isfile(f"{current_working_directory}/src/Bank/creditCards/{virtualCreditCardFile}"):
+        cardPath = f"{current_working_directory}/src/Bank/creditCards/{virtualCreditCardFile}"
+        f = open(cardPath, "r")
+        account =f.read()
+    else:
+        return json.dumps({"Error":130}).encode('utf8')
+
+    # Check if credit card as the required amount
+    
+
+    # Remove 
+
     return
 
