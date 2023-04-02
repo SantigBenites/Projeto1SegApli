@@ -23,6 +23,8 @@ def main(argv:list[str]):
     if safe_execute("error",TypeError,int,messageDict) != "error":
         
         return int(messageDict)
+    
+    print(messageDict)
 
     return 0
     
