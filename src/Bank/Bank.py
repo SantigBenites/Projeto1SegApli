@@ -6,7 +6,7 @@ from utils import safe_execute
 
 loopBool = True
 
-def main(argv:"list[str]"):
+def main(argv:list[str]):
     
 
     # Signals

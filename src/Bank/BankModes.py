@@ -102,10 +102,11 @@ def getBalanceMode(message):
 
 
 def withdrawMode(message):
-
+    print("wMode")
+    #print(message)
     # Get message values
-    virtualCreditCardFile = message["virtualCreditCardFile"]
-    shoppingValue = message["shoppingValue"]
+    virtualCreditCardFile = message["CreditCardFile"]
+    shoppingValue = message["ShoppingValue"]
     storage = BankStorageSingleton()
 
     # Get account from credit card file
@@ -118,8 +119,25 @@ def withdrawMode(message):
 
     # Check if credit card as the required amount
     
+    accountInput = virtualCreditCardFile.split('_')[0]
+    
+    
+    #print(storage.getCreditCardNumber(account))
+    (path,amount) = storage.getCreditCardBalance(account,cardPath)[0]
 
+
+    print(account == accountInput)
+    print(amount >= shoppingValue)
+    
+    
+    if account == accountInput and amount >= shoppingValue:
+        storage.updateCreditCardBalance(account,cardPath, amount-shoppingValue)
+        message = json.dumps({"vcc_file": virtualCreditCardFile , "vcc_amount_used": shoppingValue})
+
+    else:
+        message = json.dumps({"Error":130})
+        
     # Remove 
-
-    return
+    print(message)
+    return message.encode('utf8')
 

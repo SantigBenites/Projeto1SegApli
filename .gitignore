@@ -20,3 +20,4 @@ src/MBec/usersFiles/*
 !src/MBec/__pycache__
 src/Bank/__pycache__/*
 src/MBec/__pycache__/*
+src/Store/__pycache__/*

@@ -56,4 +56,5 @@ class BankStorageSingleton(object):
         storage = BankStorageSingleton()
         new = [(k,v) if (k != account) else (account, v + balance) for (k, v) in storage[account]]
         storage[account] = new
+        print(storage)
         

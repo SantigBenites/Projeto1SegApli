@@ -60,6 +60,10 @@ def depositMode(argv:list[str]):
     if(amount <= 0): 
         print ("Invalid Amount") 
         exit (1)
+        
+    if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
+        print(f"Error num 130")
+        sys.exit(1)
 
 
     m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
@@ -135,6 +139,10 @@ def getBalanceMode(argv:list[str]):
     bkPort = int(argv[argv.index("-p") + 1]) if "-p" in argv else 3000
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
     
+    if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
+        print(f"Error num 130")
+        sys.exit(1)
+        
     m = json.dumps({"MessageType": "Balance", "account":account})
     
     receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
@@ -152,7 +160,7 @@ def withdrawMode(argv:list[str]):
 
     # Terminal line inputs
     ipStoreAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
-    portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
+    portStr = argv[argv.index("-p")+1] if "-p" in argv else 5000
     stPort = int(portStr) if safe_execute(0,TypeError,int,portStr) != 0 else 3000
     virtualCreditCardFile = argv[argv.index("-v")+1] if "-v" in argv else sys.exit(0)
     shoppingValueStr = argv[argv.index("-m")+1] if "-m" in argv else sys.exit(1)
@@ -172,8 +180,10 @@ def withdrawMode(argv:list[str]):
     
     # Send receive message from Bank
     messageEncode = sendMessage(ipStoreAddress,stPort,withdrawCard)
+    
+    print(messageEncode)
     returnMessage = json.loads(messageEncode.decode('utf8'))
     
 
 
-    return
+    return returnMessage

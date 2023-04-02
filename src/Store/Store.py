@@ -1,16 +1,45 @@
+import json
 import socket
+import sys
+from StoreConnection import *
 
 
 
-def main():
-
-
-    HOST = "127.0.0.1"  # The server's hostname or IP address
-    PORT = 65432  # The port used by the server
+def main(argv: list[str]):
     
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
-        s.sendall(b"Hello, world")
-        data = s.recv(1024)
+    IPBANK = "127.0.0.1"
+    PORT = 3000
+
+
+    stPort = int(argv[argv.index("-p") + 1]) if "-p" in argv else 5000
+    authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
+
+    socket = createSocket(port=stPort)
     
-    print(f"Received {data!r}")
+    
+    try:
+        while True:
+
+            (conn, addr) = receiveNewConnection(socket)
+            
+            message = receiveMessage(conn)
+            
+            messagel = json.loads(message.decode('utf8'))
+            print(messagel)
+            
+            if messagel["MessageType"] == "WithdrawCard":
+                data = sendMessageToBank(IPBANK,PORT,message)
+                
+                message = json.loads(data.decode('utf8'))
+                
+                print(message)
+                sendMessage(conn,data)
+            
+            
+    
+    
+    except KeyboardInterrupt:
+        sys.exit()
+    
+if __name__ == "__main__":
+   main(sys.argv[1:])
