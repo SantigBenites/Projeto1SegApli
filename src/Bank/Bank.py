@@ -1,6 +1,7 @@
 import socket, sys, getopt, signal, json
 from BankConnection import *
 from BankModes import *
+from BankStorage import *
 from utils import safe_execute
 
 loopBool = True
@@ -17,6 +18,9 @@ def main(argv:list[str]):
     authFile = argv[argv.index("-s")+1] if "-s" in argv else "bank.auth"
     socket = createSocket(port=portNumber)
     
+    # Start Storage
+    storage = BankStorageSingleton()
+
     try:
         while loopBool:
 
@@ -33,6 +37,7 @@ def main(argv:list[str]):
             conn.close()
     except KeyboardInterrupt:
         print("Ended Properly")
+        print(f"storage \n {storage.users}")
         conn.close()
         sys.exit()
 

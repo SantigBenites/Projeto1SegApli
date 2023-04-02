@@ -1,12 +1,15 @@
 import os, random, json
+from BankStorage import *
 
 current_working_directory = os.getcwd()
 
 def newAccountMode(message):
 
+    storage = BankStorageSingleton()
     accountName = message["account"]
     balance = message["balance"]
-    if os.path.isfile(f"users/{accountName}.user"):
+
+    if os.path.isfile(f"{current_working_directory}/src/Bank/users/{accountName}.user"):
         return json.dumps({ "MessageType":1}).encode('utf8')
 
     PIN = random.randrange(99999,999999)
@@ -18,6 +21,8 @@ def newAccountMode(message):
         "MessageType":0,
         "PIN":PIN
     }).encode('utf8')
+
+    storage.newAccount(accountName,balance)
 
     return newAccountReponse
 

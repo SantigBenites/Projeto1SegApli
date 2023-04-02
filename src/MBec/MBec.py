@@ -4,6 +4,7 @@ from MBecModes import newAccountMode, depositMode, createCardMode, getBalanceMod
 
 def main(argv:list[str]):
 
+    print(f"argv is {argv}")
     if "-n" in argv:
         messageDict = newAccountMode(argv)
     elif "-d" in argv:
