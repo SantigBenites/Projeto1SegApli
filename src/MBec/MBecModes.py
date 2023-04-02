@@ -25,7 +25,7 @@ def newAccountMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage)
     returnMessage = json.loads(messageEncode.decode('utf8'))
     if returnMessage["MessageType"] == 0:
-        userFile = open(f"{current_working_directory}/src/MBec/usersFiles/{userFile}.user", "a")
+        userFile = open(f"{current_working_directory}/src/MBec/usersFiles/{userFile}", "a")
         PIN = returnMessage["PIN"]
         userFile.write(f"{account}:{PIN}")
         userFile.close()

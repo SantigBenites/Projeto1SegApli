@@ -11,3 +11,7 @@ src/run.sh
 src/Bank/users/*
 
 src/MBec/usersFiles/*
+
+# Ignore pychache
+src/Bank/__pycache__
+src/MBec/__pycache__
