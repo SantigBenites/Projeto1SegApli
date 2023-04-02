@@ -25,7 +25,6 @@ def main(argv: list[str]):
             message = receiveMessage(conn)
             
             messagel = json.loads(message.decode('utf8'))
-            print(messagel)
             
             if messagel["MessageType"] == "WithdrawCard":
                 data = sendMessageToBank(IPBANK,PORT,message)

@@ -181,7 +181,6 @@ def withdrawMode(argv:list[str]):
     # Send receive message from Bank
     messageEncode = sendMessage(ipStoreAddress,stPort,withdrawCard)
     
-    print(messageEncode)
     returnMessage = json.loads(messageEncode.decode('utf8'))
     
 
