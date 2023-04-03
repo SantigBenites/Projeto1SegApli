@@ -133,6 +133,7 @@ def withdrawMode(message):
     if not bool:
         return json.dumps({"Error":130}).encode('utf8')
 
+    (path,amount) = storage.getCreditCardBalance(account,cardPath)[0]
     
     # Check if credit card as the required amount
     if amount >= shoppingValue:
