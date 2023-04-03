@@ -51,14 +51,6 @@ def createCardMode(message):
     storage = BankStorageSingleton()
     accountName = message["account"]
     amount = message["amount"]
-
-    # Checking for already existing credit cards
-    creditCards = os.listdir(f"{current_working_directory}/src/Bank/creditCards")
-    r = re.compile(f"{accountName}_\d+.card")
-    matches = list(filter(r.match, creditCards))
-    if len(matches) > 0:
-        print()
-        return json.dumps({"Error":130}).encode('utf8')
     
     # Checking for account balance
     accountBalance = storage.getAccountBalance(accountName)
@@ -122,18 +114,18 @@ def withdrawMode(message):
         f = open(cardPath, "r")
         account =f.read()
     else:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":131}).encode('utf8')
 
     if shoppingValue < 0 :
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":132}).encode('utf8')
     
     
     bool = storage.isActiveCard(account,cardPath)
     
     if not bool:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":133}).encode('utf8')
 
-    (path, amount, b) = storage.getCreditCardBalance(account,cardPath)[0]
+    amount = storage.getCreditCardBalance(account,cardPath)
     
     # Check if credit card as the required amount
     if amount >= shoppingValue:
@@ -142,7 +134,7 @@ def withdrawMode(message):
         message = json.dumps({"vcc_file": virtualCreditCardFile , "vcc_amount_used": shoppingValue})
 
     else:
-        message = json.dumps({"Error":130})
+        message = json.dumps({"Error":134})
         
     return message.encode('utf8')
 
