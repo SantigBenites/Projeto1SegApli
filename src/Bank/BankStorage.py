@@ -16,7 +16,6 @@ class BankStorageSingleton(object):
         if account not in storage.users.keys():
             storage.users[account] = userFilePath
         else:
-            print(storage.users)
             return
 
     def getAccountBalance(self,account:str):
@@ -48,17 +47,32 @@ class BankStorageSingleton(object):
     def addCreditCard(self,account:str,cardPath:str, cardValue:int):
         storage = BankStorageSingleton()
         if account in storage.cards.keys():
-            storage.cards[account].append((cardPath,cardValue))
+            storage.cards[account].append((cardPath,cardValue,True))
         else:
-            storage.cards[account] = [(cardPath,cardValue)]
+            storage.cards[account] = [(cardPath,cardValue,True)]
 
     def updateCreditCardBalance(self,account:str,creditCardPath:str,balance:int):
         storage = BankStorageSingleton()
-        print(storage.cards)
-        storage.cards[account] = (creditCardPath,balance)
+        storage.cards[account] = (creditCardPath,balance,False)
         #new = [(k,v) if (k != account) else (account, v + balance) for (k, v) in storage.cards[account]]
         #storage.cards[account] = new
         #new = [(k,v) if (k != account) else (account, v + balance) for (k, v) in storage.balances]
         #storage.balances[account] = new
 
-        
+    def isActiveCard(self, account: str,cardPath:str):
+        storage = BankStorageSingleton()
+        if account in storage.cards.keys():
+            for (cpath, b , isActive) in storage.cards[account]:
+                if(cpath == cardPath):
+                    return isActive
+        return False
+    
+    def areActiveCards(self, account: str):
+        storage = BankStorageSingleton()
+        if account in storage.cards.keys():
+            for (cpath, b , isActive) in storage.cards[account]:
+                if isActive:
+                    return True
+            return False
+        return False
+            

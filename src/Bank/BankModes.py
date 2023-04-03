@@ -65,6 +65,9 @@ def createCardMode(message):
         return json.dumps({"Error":130}).encode('utf8')
     
     # Check for other active credit cards
+    bool = storage.areActiveCards(accountName)
+    if bool:
+        return json.dumps({"Error":130}).encode('utf8')
 
     # Getting card name
     numberOfCardForAccount = storage.getCreditCardNumber(accountName) + 1
@@ -119,9 +122,14 @@ def withdrawMode(message):
     else:
         return json.dumps({"Error":130}).encode('utf8')
 
+    if shoppingValue < 0 :
+        return json.dumps({"Error":130}).encode('utf8')
     
     
-    (path,amount) = storage.getCreditCardBalance(account,cardPath)[0]
+    bool = storage.isActiveCard(account ,cardPath)
+    
+    if not bool:
+        return json.dumps({"Error":130}).encode('utf8')
 
     
     # Check if credit card as the required amount

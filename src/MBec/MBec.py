@@ -17,8 +17,7 @@ def main(argv:list[str]):
         messageDict = withdrawMode(argv)
     else:
         sys.exit(1)
-        
-    print(messageDict)
+
 
     if safe_execute("error",TypeError,int,messageDict) != "error":
         
