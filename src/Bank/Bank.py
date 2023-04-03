@@ -2,7 +2,7 @@ import socket, sys, getopt, signal, json
 from BankConnection import *
 from BankModes import *
 from BankStorage import *
-from utils import safe_execute
+from utils import *
 
 loopBool = True
 
@@ -11,6 +11,7 @@ def main(argv:list[str]):
 
     # Signals
     #signal.signal(signal.SIGINT, exit)
+    argv = stringToArgs("".join(argv))
 
     # Processing Arguments
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
@@ -50,7 +51,8 @@ def main(argv:list[str]):
     except KeyboardInterrupt:
         print("Ended Properly")
         print(f"Storage: \n {storage.users}")
-        conn.close()
+        if 'conn' in locals():
+            conn.close()
         sys.exit()
 
 

@@ -1,5 +1,5 @@
 import sys, socket, json, os
-from utils import safe_execute
+from utils import *
 from MBecConnection import sendMessage
 
 current_working_directory = os.getcwd()
@@ -19,8 +19,24 @@ def newAccountMode(argv:list[str]):
     bkPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 3000
     userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.user"
     
-    # Verify if balance is in argv and if is a int
-    if "-n" in argv and safe_execute("error",TypeError,float,argv[argv.index("-n")+1]) != "error":
+    # Verify if balance is in argv
+    if "-n" in argv:
+        balance = argv[argv.index("-n")+1]
+    else:
+        return 130
+    
+    # All Validation for all inputs
+    if  not (
+        argsAreValidAccountNames(account) and
+        argsAreValidFileNames(authFile) and
+        argsAreValidIPv4(ipBankAddress) and 
+        argsAreValidPort(bkPort) and 
+        argsAreValidFileNames(userFile) and 
+        argsAreValidBalances(balance)):
+            return 130
+    
+    # Verify if balance is float
+    if safe_execute("error",TypeError,float,argv[argv.index("-n")+1]) != "error":
         balance = float(argv[argv.index("-n")+1])
     else:
         return 130
@@ -70,10 +86,31 @@ def depositMode(argv:list[str]):
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
 
     # Verify if amount is in argv and if is a int
-    if "-d" in argv and safe_execute("error",TypeError,float,argv[argv.index("-d")+1]) != "error":
+    if "-d" in argv:
+        amount = argv[argv.index("-d") + 1]
+    else:
+        return 130
+    
+    # All Validation for all inputs
+    if  not (
+        argsAreValidAccountNames(account) and
+        argsAreValidFileNames(userFile) and 
+        argsAreValidIPv4(ipBankAddress) and 
+        argsAreValidPort(bkPort) and 
+        argsAreValidFileNames(authFile) and
+        argsAreValidBalances(amount)):
+
+            print(amount)
+
+            return 130
+    
+
+    # Verify if amount is float
+    if safe_execute("error",TypeError,float,argv[argv.index("-d")+1]) != "error":
         amount = float(argv[argv.index("-d") + 1])
     else:
         return 130
+
     
     if(amount <= 0): 
         print ("Invalid Amount") 
@@ -108,8 +145,24 @@ def createCardMode(argv:list[str]):
     userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.user"
 
     # Verify if amount is in argv and if is a int
-    if "-c" in argv and safe_execute("error",TypeError,float,argv[argv.index("-c")+1]) != "error":
-        amount = float(argv[argv.index("-c")+1])
+    if "-c" in argv:
+        amount = argv[argv.index("-c")+1]
+    else:
+        return 130
+    
+    # All Validation for all inputs
+    if  not (
+        argsAreValidFileNames(authFile) and
+        argsAreValidIPv4(ipBankAddress) and 
+        argsAreValidPort(bkPort) and 
+        argsAreValidAccountNames(account) and
+        argsAreValidFileNames(userFile) and 
+        argsAreValidBalances(amount)):
+            return 130
+    
+    # Verify if amount is float
+    if safe_execute("error",TypeError,float,argv[argv.index("-c")+1]) != "error":
+        amount = float(argv[argv.index("-c") + 1])
     else:
         return 130
 
@@ -158,6 +211,16 @@ def getBalanceMode(argv:list[str]):
     
     if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
         return 130
+    
+    # All Validation for all inputs
+    if  not (
+        argsAreValidAccountNames(account) and
+        argsAreValidFileNames(userFile) and 
+        argsAreValidIPv4(ipBankAddress) and 
+        argsAreValidPort(bkPort) and 
+        argsAreValidFileNames(authFile)):
+            return 130
+
         
     m = json.dumps({"MessageType": "Balance", "account":account})
     
@@ -176,7 +239,7 @@ def withdrawMode(argv:list[str]):
     # Terminal line inputs
     ipStoreAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 5000
-    stPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 3000
+    stPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 5000
 
     # Verify the virtual credit card file
     if "-v" in argv:
@@ -185,8 +248,26 @@ def withdrawMode(argv:list[str]):
         return 130
 
     # 
-    if "-m" in argv and safe_execute("error",TypeError,int,argv[argv.index("-m")+1]) != "error":
-        shoppingValue = int(argv[argv.index("-m")+1])
+    if "-m" in argv:
+        shoppingValue = argv[argv.index("-m")+1]
+    else:
+        return 130
+
+    # All Validation for all inputs
+    if  not (
+        argsAreValidIPv4(ipStoreAddress) and 
+        argsAreValidPort(stPort) and 
+        argsAreValidBalances(shoppingValue) and
+        argsAreValidFileNames(virtualCreditCardFile)):
+            print(argsAreValidIPv4(ipStoreAddress))
+            print(argsAreValidPort(stPort))
+            print(argsAreValidBalances(shoppingValue))
+            print(argsAreValidFileNames(virtualCreditCardFile))
+            return 130
+    
+    # Verify if shoppingValue is float
+    if safe_execute("error",TypeError,float,argv[argv.index("-m")+1]) != "error":
+        shoppingValue = float(argv[argv.index("-m") + 1])
     else:
         return 130
 
