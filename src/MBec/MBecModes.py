@@ -136,12 +136,17 @@ def depositMode(argv:list[str]):
 # mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -c <amount>
 def createCardMode(argv:list[str]):
 
+    # Verify if account is in argv
+    if "-a" in argv:
+        account = argv[argv.index("-a")+1]
+    else: 
+        return 130
+
     # Terminal line inputs
     authFile = argv[argv.index("-s")+1] if "-s" in argv else "bank.auth"
     ipBankAddress = argv[argv.index("-i")+1] if "-i" in argv else "127.0.0.1"
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
     bkPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 3000
-    account = argv[argv.index("-a")+1] if "-a" in argv else sys.exit(0)
     userFile = argv[argv.index("-u")+1] if "-u" in argv else f"{account}.user"
 
     # Verify if amount is in argv and if is a int
@@ -152,10 +157,10 @@ def createCardMode(argv:list[str]):
     
     # All Validation for all inputs
     if  not (
+        argsAreValidAccountNames(account) and
         argsAreValidFileNames(authFile) and
         argsAreValidIPv4(ipBankAddress) and 
         argsAreValidPort(bkPort) and 
-        argsAreValidAccountNames(account) and
         argsAreValidFileNames(userFile) and 
         argsAreValidBalances(amount)):
             return 130
