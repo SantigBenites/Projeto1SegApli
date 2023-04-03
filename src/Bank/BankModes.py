@@ -39,7 +39,7 @@ def depositMode(message):
     #nedds to verify the userFile corresponds to account
     if(os.path.isfile(f"{current_working_directory}/src/Bank/users/{account}.user")):
         storage.addAccountBalance(account,deposit)
-        response = json.dumps({"account":account, "deposit":storage.getAccountBalance(account)}).encode('utf8')
+        response = json.dumps({"account":account, "deposit":deposit}).encode('utf8')
     else:
         response = json.dumps({"Error":130}).encode('utf8')
 
@@ -54,9 +54,10 @@ def createCardMode(message):
 
     # Checking for already existing credit cards
     creditCards = os.listdir(f"{current_working_directory}/src/Bank/creditCards")
-    r = re.compile("55555_\d+.card")
+    r = re.compile(f"{accountName}_\d+.card")
     matches = list(filter(r.match, creditCards))
     if len(matches) > 0:
+        print()
         return json.dumps({"Error":130}).encode('utf8')
     
     # Checking for account balance
@@ -66,6 +67,7 @@ def createCardMode(message):
     
     # Check for other active credit cards
     bool = storage.areActiveCards(accountName)
+    print(bool)
     if bool:
         return json.dumps({"Error":130}).encode('utf8')
 
