@@ -53,14 +53,12 @@ class BankStorageSingleton(object):
 
     def updateCreditCardBalance(self,account:str,creditCardPath:str,balance:int):
         storage = BankStorageSingleton()
-        storage.cards[account] = (creditCardPath,balance,False)
-        #new = [(k,v) if (k != account) else (account, v + balance) for (k, v) in storage.cards[account]]
-        #storage.cards[account] = new
-        #new = [(k,v) if (k != account) else (account, v + balance) for (k, v) in storage.balances]
-        #storage.balances[account] = new
+        storage.cards[account] = [(creditCardPath,balance,False)]
+
 
     def isActiveCard(self, account: str,cardPath:str):
         storage = BankStorageSingleton()
+        print(storage.cards[account])
         if account in storage.cards.keys():
             for (cpath, b , isActive) in storage.cards[account]:
                 if(cpath == cardPath):

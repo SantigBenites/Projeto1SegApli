@@ -128,12 +128,12 @@ def withdrawMode(message):
         return json.dumps({"Error":130}).encode('utf8')
     
     
-    bool = storage.isActiveCard(account ,cardPath)
+    bool = storage.isActiveCard(account,cardPath)
     
     if not bool:
         return json.dumps({"Error":130}).encode('utf8')
 
-    (path,amount) = storage.getCreditCardBalance(account,cardPath)[0]
+    (path, amount, b) = storage.getCreditCardBalance(account,cardPath)[0]
     
     # Check if credit card as the required amount
     if amount >= shoppingValue:
