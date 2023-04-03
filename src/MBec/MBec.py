@@ -14,7 +14,7 @@ def main(argv:list[str]):
         messageDict = createCardMode(argv)
     elif "-g" in argv:
         messageDict = getBalanceMode(argv)
-    elif "-m"in argv:
+    elif "-m" in argv:
         messageDict = withdrawMode(argv)
     else:
         sys.exit(1)

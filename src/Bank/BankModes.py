@@ -1,22 +1,32 @@
 import os, random, json, re
 from BankStorage import *
+from Cripto import *
 
 current_working_directory = os.getcwd()
 
 def newAccountMode(message):
+    
+    if "account" and "balance" and "fileName" and "content" not in message:
+        return json.dumps({"Error":130}).encode('utf8')
 
     storage = BankStorageSingleton()
     accountName = message["account"]
     balance = message["balance"]
+    userFileName = message["fileName"]
+    userFileContent = message ["content"]
 
     # Checking user file doesn't exist
-    if os.path.isfile(f"{current_working_directory}/src/Bank/users/{accountName}.user"):
+    if os.path.isfile(f"{current_working_directory}/src/Bank/users/{userFileName}"):
         return json.dumps({"Error":130}).encode('utf8')
 
     # Creating user file
-    userPath = f"{current_working_directory}/src/Bank/users/{accountName}.user"
+    userPath = f"{current_working_directory}/src/Bank/users/{userFileName}"
     userFile = open(userPath, "a")
+    userFile.write(userFileContent)
     userFile.close()
+    
+    h = hashFile(userPath)
+    
 
     # Generating response
     newAccountResponse = json.dumps({
@@ -25,19 +35,31 @@ def newAccountMode(message):
     }).encode('utf8')
 
     # Updating runtime database
-    storage.newAccount(accountName,userPath)
+    storage.newAccount(accountName,userPath,h)
     storage.addAccountBalance(accountName,balance)
 
     return newAccountResponse
 
 def depositMode(message):
     
+    if "account" and "Amount" and "file" not in message:
+        return json.dumps({"Error":130}).encode('utf8')
+    
     storage = BankStorageSingleton()
     account = message["account"]
     deposit = message["Amount"]
+    hashFromUser = message["file"]
+    
+    ph = storage.getHashPathUser(account)
+    
+    if(ph == None):
+        response = json.dumps({"Error":130}).encode('utf8')
+        
+    (path, hash) = ph
+    
     
     #nedds to verify the userFile corresponds to account
-    if(os.path.isfile(f"{current_working_directory}/src/Bank/users/{account}.user")):
+    if(os.path.isfile(path)) and hash == hashFromUser:
         storage.addAccountBalance(account,deposit)
         response = json.dumps({"account":account, "deposit":deposit}).encode('utf8')
     else:
@@ -47,10 +69,14 @@ def depositMode(message):
 
 # Example: {"account":"55555","vcc_amount":12.00, "vcc_file":"55555_2.card"}
 def createCardMode(message):
+    
+    if "account" and "amount" and "file" not in message:
+        return json.dumps({"Error":130}).encode('utf8')
 
     storage = BankStorageSingleton()
     accountName = message["account"]
     amount = message["amount"]
+    hashFromUser = message["file"]
     
     # Checking for account balance
     accountBalance = storage.getAccountBalance(accountName)
@@ -59,10 +85,21 @@ def createCardMode(message):
     
     # Check for other active credit cards
     bool = storage.areActiveCards(accountName)
-    print(bool)
     if bool:
         return json.dumps({"Error":130}).encode('utf8')
-
+    
+    ph = storage.getHashPathUser(accountName)
+    
+    if(ph == None):
+        return json.dumps({"Error":130}).encode('utf8')
+    
+    (path,hash) = ph
+    
+    if hash != hashFromUser:
+        return json.dumps({"Error":130}).encode('utf8')
+    
+    
+ 
     # Getting card name
     numberOfCardForAccount = storage.getCreditCardNumber(accountName) + 1
     cardName = f"{accountName}_{numberOfCardForAccount}"
@@ -88,10 +125,22 @@ def createCardMode(message):
 
 def getBalanceMode(message):
     
+    if "account" and "file" not in message:
+        return json.dumps({"Error":130}).encode('utf8')
+    
     account = message["account"]
+    hashFromUser = message["file"]
     
     storage = BankStorageSingleton()
-    if(os.path.isfile(f"{current_working_directory}/src/Bank/users/{account}.user")):
+    
+    ph = storage.getHashPathUser(account)
+    
+    if(ph == None):
+        message = json.dumps({"Error":130})
+        
+    (pathFile,hash) = ph
+    
+    if os.path.isfile(pathFile) and hash == hashFromUser :
         response = json.dumps({"account": account, "balance": storage.getAccountBalance(account)})
         
     else:
@@ -102,6 +151,9 @@ def getBalanceMode(message):
 
 
 def withdrawMode(message):
+    
+    if "CreditCardFile" and "ShoppingValue" not in message:
+        return json.dumps({"Error":130}).encode('utf8')
 
     # Get message values
     virtualCreditCardFile = message["CreditCardFile"]

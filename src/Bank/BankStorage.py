@@ -11,12 +11,19 @@ class BankStorageSingleton(object):
           cls.instance = super(BankStorageSingleton, cls).__new__(cls)
         return cls.instance
    
-    def newAccount(self,account:str,userFilePath:int):
+    def newAccount(self,account:str,userFilePath:int, hash:str):
         storage = BankStorageSingleton()
         if account not in storage.users.keys():
-            storage.users[account] = userFilePath
+            storage.users[account] = (userFilePath,hash)
         else:
             return
+        
+    def getHashPathUser(self, account):
+        storage = BankStorageSingleton()
+        if account in storage.users.keys():
+            (path,hash) = storage.users[account]
+            return (path,hash)
+        return None
 
     def getAccountBalance(self,account:str):
         storage = BankStorageSingleton()
@@ -61,7 +68,6 @@ class BankStorageSingleton(object):
 
     def isActiveCard(self, account: str,cardPath:str):
         storage = BankStorageSingleton()
-        print(storage.cards[account])
         if account in storage.cards.keys():
             for (cpath, b , isActive) in storage.cards[account]:
                 if(cpath == cardPath):

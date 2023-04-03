@@ -18,7 +18,7 @@ def receiveNewConnection(socket:socket.socket):
 
 def receiveMessage(connection:socket):
 
-    return connection.recv(1024)
+    return connection.recv(5000)
 
 def sendMessage(connection:socket,data):
 

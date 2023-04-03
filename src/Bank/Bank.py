@@ -28,25 +28,26 @@ def main(argv:list[str]):
             (conn,addr) = receiveNewConnection(socket)
             message = receiveMessage(conn)
             message = json.loads(message.decode('utf8'))
+            
+            if "MessageType" in message:
+                match message["MessageType"]:
+                    case "NewAccount":
+                        response = newAccountMode(message)
+                        sendMessage(conn,response)
+                    case "Deposit":
+                        response = depositMode(message)
+                        sendMessage(conn, response)
+                    case "Balance":
+                        response = getBalanceMode(message)
+                        sendMessage(conn, response)
+                    case "CreateCard":
+                        response = createCardMode(message)
+                        sendMessage(conn,response)
+                    case "WithdrawCard":
+                        response = withdrawMode(message)
+                        sendMessage(conn,response)
 
-            match message["MessageType"]:
-                case "NewAccount":
-                    response = newAccountMode(message)
-                    sendMessage(conn,response)
-                case "Deposit":
-                    response = depositMode(message)
-                    sendMessage(conn, response)
-                case "Balance":
-                    response = getBalanceMode(message)
-                    sendMessage(conn, response)
-                case "CreateCard":
-                    response = createCardMode(message)
-                    sendMessage(conn,response)
-                case "WithdrawCard":
-                    response = withdrawMode(message)
-                    sendMessage(conn,response)
-
-            print(response)
+                print(response)
             conn.close()
     except KeyboardInterrupt:
         print("Ended Properly")

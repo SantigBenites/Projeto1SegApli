@@ -1,5 +1,7 @@
+import secrets
 import sys, socket, json, os
 from utils import *
+from Cripto import *
 from MBecConnection import sendMessage
 
 current_working_directory = os.getcwd()
@@ -44,13 +46,29 @@ def newAccountMode(argv:list[str]):
     # Check if initial balance is above 15
     if balance < 15:
         return 130
-
+    
+    if os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
+        return 130
+    
+    pathUserFile =f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
+    
+    s  = secrets.token_bytes(1000)
+    
+    uFile = open(pathUserFile, "a")
+    uFile.write(str(s))
+    uFile.close()
+    
+    
+    h = hashFile(pathUserFile)
     # Generate message
     newAccountMessage = json.dumps({
         "MessageType": "NewAccount",
         "account": account,
         "balance": balance,
+        "fileName": userFile,
+        "content" : str(s)
     }).encode('utf8')
+
 
     # Send receive message from Bank
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage)
@@ -119,9 +137,11 @@ def depositMode(argv:list[str]):
     if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
         print(f"Error num 130")
         return 130
+    
+    
+    h = hashFile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}")
 
-
-    m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
+    m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account, "file":h})
     
     receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
     
@@ -178,12 +198,15 @@ def createCardMode(argv:list[str]):
     # Check if credit card initial amount is above 0
     if amount <= 0:
         return 130
+    
+    h = hashFile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}")
 
     # Generate message
     newCardMessage = json.dumps({
         "MessageType": "CreateCard",
         "account": account,
         "amount": amount,
+        "file": h
     }).encode('utf8')
 
     # Send receive message from Bank
@@ -225,9 +248,9 @@ def getBalanceMode(argv:list[str]):
         argsAreValidPort(bkPort) and 
         argsAreValidFileNames(authFile)):
             return 130
-
+    h = hashFile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}")
         
-    m = json.dumps({"MessageType": "Balance", "account":account})
+    m = json.dumps({"MessageType": "Balance", "account":account, "file": h})
     
     receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
     
@@ -251,13 +274,13 @@ def withdrawMode(argv:list[str]):
         virtualCreditCardFile = argv[argv.index("-v")+1]
     else:
         return 130
+    
 
     # 
     if "-m" in argv:
         shoppingValue = argv[argv.index("-m")+1]
     else:
         return 130
-
     # All Validation for all inputs
     if  not (
         argsAreValidIPv4(ipStoreAddress) and 
@@ -269,7 +292,7 @@ def withdrawMode(argv:list[str]):
             print(argsAreValidBalances(shoppingValue))
             print(argsAreValidFileNames(virtualCreditCardFile))
             return 130
-    
+        
     # Verify if shoppingValue is float
     if safe_execute("error",TypeError,float,argv[argv.index("-m")+1]) != "error":
         shoppingValue = float(argv[argv.index("-m") + 1])
@@ -279,6 +302,7 @@ def withdrawMode(argv:list[str]):
     # Check if the withdrawn amount is above 0
     if shoppingValue <= 0:
         return 130
+
 
     # Generate message
     withdrawCard = json.dumps({
