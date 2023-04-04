@@ -12,7 +12,10 @@ Project done with python
 - Add more needed verifications like time part of message
 - Implement attacks to defend
 - Add threads to deal with 2 clients at the same time
-
+- Vcc file in user
+- User file passes to private key
+- Add authentication between user and bank
+- Add symmetric key between bank and user for encripton
 
 # Git commands
 
