@@ -37,26 +37,26 @@ def main(argv:list[str]):
         while loopBool:
 
             (conn,addr) = receiveNewConnection(socket)
-            message = receiveMessage(conn)
+            message,derived_key = receiveMessage(conn)
             message = json.loads(message.decode('utf8'))
             
             if "MessageType" in message:
                 match message["MessageType"]:
                     case "NewAccount":
                         response = newAccountMode(message)
-                        sendMessage(conn,response)
+                        sendMessage(conn,response,derived_key)
                     case "Deposit":
                         response = depositMode(message)
-                        sendMessage(conn, response)
+                        sendMessage(conn, response,derived_key)
                     case "Balance":
                         response = getBalanceMode(message)
-                        sendMessage(conn, response)
+                        sendMessage(conn, response,derived_key)
                     case "CreateCard":
                         response = createCardMode(message)
-                        sendMessage(conn,response)
+                        sendMessage(conn,response,derived_key)
                     case "WithdrawCard":
                         response = withdrawMode(message)
-                        sendMessage(conn,response)
+                        sendMessage(conn,response,derived_key)
 
                 print(response)
             conn.close()
