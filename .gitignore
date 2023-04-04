@@ -22,3 +22,7 @@ src/Bank/__pycache__/*
 src/MBec/__pycache__/*
 src/Store/__pycache__/*
 out.txt
+src/MBec/test.py
+auth
+src/MBec/testCert.py
+

@@ -3,6 +3,7 @@ from BankConnection import *
 from BankModes import *
 from BankStorage import *
 from utils import *
+from Cripto import *
 
 loopBool = True
 
@@ -19,6 +20,16 @@ def main(argv:list[str]):
     authFile = argv[argv.index("-s")+1] if "-s" in argv else "bank.auth"
     socket = createSocket(port=portNumber)
     
+    current_working_directory = os.getcwd()
+    
+    if os.path.isfile(f"{current_working_directory}/src/Bank/auth/{authFile}"):
+        sys.exit()
+        
+    
+    
+    privateKey = getPrivateKey()
+    cert = generateSelfSignedCert(privateKey, f"{current_working_directory}/src/Bank/auth/{authFile}")
+
     # Start Storage
     storage = BankStorageSingleton()
 

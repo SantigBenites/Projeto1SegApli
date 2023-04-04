@@ -1,5 +1,7 @@
 import socket
 
+from cryptography import x509
+
 def createSocket(host="127.0.0.1",port=3000):
 
     s = socket.socket()
@@ -11,7 +13,7 @@ def createSocket(host="127.0.0.1",port=3000):
 def receiveNewConnection(socket:socket.socket):
 
     socket.listen()
-    conn, addr = socket.accept()    
+    conn, addr = socket.accept()
     return (conn,addr)
 
 
