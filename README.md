@@ -7,7 +7,6 @@ Project done with python
 # TODO
 
 - Setup files
-- Add utility to .auth file
 - Add more needed verifications like time part of message
 - Add threads to deal with 2 clients at the same time
 - Vcc file in user
