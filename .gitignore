@@ -26,3 +26,6 @@ src/MBec/test.py
 auth
 src/MBec/testCert.py
 
+src/test.py
+src/MBec/bank.auth
+path.txt
