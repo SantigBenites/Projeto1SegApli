@@ -30,3 +30,10 @@ def stringToArgs(argsString:str):
                 args[-1] += char
 
     return args
+
+def pad(s):
+    BS = 16
+    return s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
+
+def unpad(s):
+    return s[:-ord(s[len(s)-1:])]
