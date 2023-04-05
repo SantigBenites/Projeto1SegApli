@@ -1,4 +1,4 @@
-import socket, sys, getopt, signal, json, threading
+import socket, sys, getopt, signal, json, threading, logging
 from subprocess import *
 from BankConnection import *
 from BankModes import *
@@ -34,6 +34,8 @@ def main(argv:list[str]):
 
     # Start Storage
     storage = BankStorageSingleton()
+    # Start sys out lock
+    lock = threading.Lock()
     # Current Threads
     threads:list[threading.Thread] = []
 
@@ -41,9 +43,10 @@ def main(argv:list[str]):
         while loopBool:
 
             (conn,addr) = receiveNewConnection(socket)
-            x = threading.Thread(target=new_threaded_client, args=(conn,))
+            x = threading.Thread(target=new_threaded_client, args=(conn,lock))
             threads.append(x)
             x.start()
+            x.join()
             
     except KeyboardInterrupt:
         # Ending properly
@@ -65,9 +68,10 @@ def main(argv:list[str]):
         sys.exit()
 
 
-def new_threaded_client(conn):
+def new_threaded_client(conn,lock):
     message,derived_key = receiveMessage(conn)
     message = json.loads(message.decode('utf8'))
+    response = ""
     
     if "MessageType" in message:
         match message["MessageType"]:
@@ -87,7 +91,9 @@ def new_threaded_client(conn):
                 response = withdrawMode(message)
                 sendMessage(conn,response,derived_key)
 
-                print(response)
+    with lock:
+        print(response)
+        sys.stdout.flush()
     conn.close()
 
 def exit(_signo, _stack_frame):

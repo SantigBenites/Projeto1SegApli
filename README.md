@@ -8,10 +8,10 @@ Project done with python
 
 - Setup files
 - Add more needed verifications like time part of message
-- Add threads to deal with 2 clients at the same time
 - Vcc file in user
 - Add authentication between user and bank
 - Use different IVs for encrypton
+- Make sure the project can be compiled from zero in a VM 
 
 # Git commands
 
