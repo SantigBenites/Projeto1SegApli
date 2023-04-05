@@ -41,6 +41,7 @@ def main(argv:list[str]):
             message = json.loads(message.decode('utf8'))
             
             if "MessageType" in message:
+                print(message)
                 match message["MessageType"]:
                     case "NewAccount":
                         response = newAccountMode(message)

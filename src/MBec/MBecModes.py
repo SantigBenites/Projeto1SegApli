@@ -52,27 +52,31 @@ def newAccountMode(argv:list[str]):
     
     pathUserFile =f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
     
-    s  = secrets.token_bytes(1000)
+    privateKey = getPrivateKey()
+    uploadPrivateKeyToFile(privateKey,pathUserFile)
     
-    uFile = open(pathUserFile, "a")
-    uFile.write(str(s))
-    uFile.close()
+    publicKey = getPublicKey(privateKey)
     
     
-    h = hashFile(pathUserFile)
+    pem = publicKey.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
     # Generate message
     newAccountMessage = json.dumps({
         "MessageType": "NewAccount",
         "account": account,
         "balance": balance,
-        "fileName": userFile,
-        "content" : str(s)
+        "publicKey" : pem.decode()
     }).encode('utf8')
-
+    print(newAccountMessage)
 
     # Send receive message from Bank
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage)
+    
     returnMessage = json.loads(messageEncode.decode('utf8'))
+
+    
 
     # Check if Bank response is valid or Error 
     if "account" in returnMessage and "initial_balance" in returnMessage:

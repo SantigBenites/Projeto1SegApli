@@ -1,5 +1,6 @@
 import socket, sys, getopt, signal
 from utils import *
+from Cripto import *
 from MBecModes import newAccountMode, depositMode, createCardMode, getBalanceMode, withdrawMode
 
 def main(argv:list[str]):

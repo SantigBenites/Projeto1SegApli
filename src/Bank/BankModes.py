@@ -6,27 +6,15 @@ current_working_directory = os.getcwd()
 
 def newAccountMode(message):
     
-    if "account" and "balance" and "fileName" and "content" not in message:
+    if "account" and "balance" and "publicKey" not in message:
         return json.dumps({"Error":130}).encode('utf8')
 
     storage = BankStorageSingleton()
     accountName = message["account"]
     balance = message["balance"]
-    userFileName = message["fileName"]
-    userFileContent = message ["content"]
+    StrPublicKey = message["publicKey"]
 
-    # Checking user file doesn't exist
-    if os.path.isfile(f"{current_working_directory}/src/Bank/users/{userFileName}"):
-        return json.dumps({"Error":130}).encode('utf8')
-
-    # Creating user file
-    userPath = f"{current_working_directory}/src/Bank/users/{userFileName}"
-    userFile = open(userPath, "a")
-    userFile.write(userFileContent)
-    userFile.close()
-    
-    h = hashFile(userPath)
-    
+    PublicKey = StrPublicKey.encode()
 
     # Generating response
     newAccountResponse = json.dumps({
@@ -35,7 +23,7 @@ def newAccountMode(message):
     }).encode('utf8')
 
     # Updating runtime database
-    storage.newAccount(accountName,userPath,h)
+    storage.newAccount(accountName,PublicKey)
     storage.addAccountBalance(accountName,balance)
 
     return newAccountResponse
