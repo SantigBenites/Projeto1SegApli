@@ -1,4 +1,5 @@
 import socket, sys, getopt, signal, json
+from subprocess import *
 from BankConnection import *
 from BankModes import *
 from BankStorage import *
@@ -63,6 +64,7 @@ def main(argv:list[str]):
     except KeyboardInterrupt:
         print("Ended Properly")
         print(f"Storage: \n {storage.users}")
+        call(["python", "src/clearUserFiles.py"])
         if 'conn' in locals():
             conn.close()
         sys.exit()

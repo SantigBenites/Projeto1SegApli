@@ -23,7 +23,8 @@ src/MBec/__pycache__/*
 src/Store/__pycache__/*
 out.txt
 src/MBec/test.py
-auth
+!src/Bank/auth
+src/Bank/auth/*
 src/MBec/testCert.py
 
 src/test.py

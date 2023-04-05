@@ -7,15 +7,12 @@ Project done with python
 # TODO
 
 - Setup files
-- Add utility to .user files, sending them to server for verification and adding random bytes to use as PIN
-- Add utility to .auth file, leading to symmetric cryptography between bank and client, and asymmetric between client and store
+- Add utility to .auth file
 - Add more needed verifications like time part of message
-- Implement attacks to defend
 - Add threads to deal with 2 clients at the same time
 - Vcc file in user
-- User file passes to private key
 - Add authentication between user and bank
-- Add symmetric key between bank and user for encripton
+- Use different IVs for encrypton
 
 # Git commands
 
