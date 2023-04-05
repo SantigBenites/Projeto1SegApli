@@ -1,10 +1,11 @@
-import socket, sys, getopt, signal, json
+import socket, sys, getopt, signal, json, threading
 from subprocess import *
 from BankConnection import *
 from BankModes import *
 from BankStorage import *
 from utils import *
 from Cripto import *
+#from _thread import *
 
 loopBool = True
 
@@ -33,42 +34,61 @@ def main(argv:list[str]):
 
     # Start Storage
     storage = BankStorageSingleton()
+    # Current Threads
+    threads:list[threading.Thread] = []
 
     try:
         while loopBool:
 
             (conn,addr) = receiveNewConnection(socket)
-            message,derived_key = receiveMessage(conn)
-            message = json.loads(message.decode('utf8'))
+            x = threading.Thread(target=new_threaded_client, args=(conn,))
+            threads.append(x)
+            x.start()
             
-            if "MessageType" in message:
-                match message["MessageType"]:
-                    case "NewAccount":
-                        response = newAccountMode(message)
-                        sendMessage(conn,response,derived_key)
-                    case "Deposit":
-                        response = depositMode(message)
-                        sendMessage(conn, response,derived_key)
-                    case "Balance":
-                        response = getBalanceMode(message)
-                        sendMessage(conn, response,derived_key)
-                    case "CreateCard":
-                        response = createCardMode(message)
-                        sendMessage(conn,response,derived_key)
-                    case "WithdrawCard":
-                        response = withdrawMode(message)
-                        sendMessage(conn,response,derived_key)
-
-                print(response)
-            conn.close()
     except KeyboardInterrupt:
+        # Ending properly
+        
+        # Printing current storage
         print("Ended Properly")
         print(f"Storage: \n {storage.users}")
+        
+        # Removing userFiles automatically, to remove in final version
         call(["python", "src/clearUserFiles.py"])
+
+        # Joining threads
+        for thr in threads:
+            thr.join()
+
+        # 
         if 'conn' in locals():
             conn.close()
         sys.exit()
 
+
+def new_threaded_client(conn):
+    message,derived_key = receiveMessage(conn)
+    message = json.loads(message.decode('utf8'))
+    
+    if "MessageType" in message:
+        match message["MessageType"]:
+            case "NewAccount":
+                response = newAccountMode(message)
+                sendMessage(conn,response,derived_key)
+            case "Deposit":
+                response = depositMode(message)
+                sendMessage(conn, response,derived_key)
+            case "Balance":
+                response = getBalanceMode(message)
+                sendMessage(conn, response,derived_key)
+            case "CreateCard":
+                response = createCardMode(message)
+                sendMessage(conn,response,derived_key)
+            case "WithdrawCard":
+                response = withdrawMode(message)
+                sendMessage(conn,response,derived_key)
+
+                print(response)
+    conn.close()
 
 def exit(_signo, _stack_frame):
     sys.exit()
