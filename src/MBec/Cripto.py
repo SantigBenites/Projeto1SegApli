@@ -38,6 +38,15 @@ def readPrivateKeyFromFile(path:str):
         key_file.close()
     return privateKey
 
+def encryptDataWithPublicKey(publicKey, message):
+    return publicKey.encrypt(
+        message,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
 
 def getPrivateKey():
     private_key = rsa.generate_private_key(

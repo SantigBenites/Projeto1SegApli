@@ -14,6 +14,8 @@ src/Bank/users/*
 src/Bank/creditCards/*
 !src/MBec/usersFiles
 src/MBec/usersFiles/*
+src/MBec/creditCard/*
+!src/MBec/creditCard
 
 # Ignore pychache
 !src/Bank/__pycache__

@@ -1,4 +1,5 @@
 import json
+import pickle
 import socket
 import sys
 from StoreConnection import *
@@ -19,20 +20,30 @@ def main(argv: list[str]):
     
     try:
         while True:
-
+            #authFile
             (conn, addr) = receiveNewConnection(socket)
             
-            message,derived_key = receiveMessage(conn)
+            receiveMsg,derived_key = receiveMessage(conn)
             
-            messagel = json.loads(message.decode('utf8'))
+            withdrawCardMessage = pickle.loads(receiveMsg)
             
-            if messagel["MessageType"] == "WithdrawCard":
-                data = sendMessageToBank(IPBANK,PORT,message)
-                
-                message = json.loads(data.decode('utf8'))
-                
-                print(message)
-                sendMessage(conn,data,derived_key)
+            if "MessageType" and "content" in withdrawCardMessage:
+                if withdrawCardMessage["MessageType"] == "WithdrawCard":
+                    
+                    fileContent = pickle.loads(withdrawCardMessage["content"])
+                    
+                    if "ip" and "port" and "message" and"signature" not in fileContent:
+                        #erro
+                        return
+                    #messagetoAuthenticate has to have a MessageType
+                    messageToAuthenticate = pickle.loads({"message": fileContent["message"], "signature": fileContent["signature"]})
+                    
+                    data = sendMessageToBank(fileContent["ip"],fileContent["port"],messageToAuthenticate)
+                    
+                    message = json.loads(data.decode('utf8'))
+                    
+                    print(message)
+                    sendMessage(conn,data,derived_key)
             
             
     

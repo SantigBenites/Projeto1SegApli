@@ -3,7 +3,7 @@ import secrets
 import sys, socket, json, os
 from utils import *
 from Cripto import *
-from MBecConnection import sendMessage
+from MBecConnection import *
 
 current_working_directory = os.getcwd()
 lastUsedAccount = None
@@ -61,7 +61,6 @@ def newAccountMode(argv:list[str]):
     pathUserFile =f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
     
     privateKey = getPrivateKey()
-    uploadPrivateKeyToFile(privateKey,pathUserFile)
     
     publicKey = getPublicKey(privateKey)
     
@@ -96,7 +95,7 @@ def newAccountMode(argv:list[str]):
 
     # Check if Bank response is valid or Error 
     if "account" in returnMessage and "initial_balance" in returnMessage:
-        lastUsedAccount=account
+        uploadPrivateKeyToFile(privateKey,pathUserFile)
         return returnMessage
     else:
         # Error from Bank
@@ -267,9 +266,25 @@ def createCardMode(argv:list[str]):
     if not verifySignature(publicKeyBank,signedMessage["signature"],signedMessage["message"]):
         return 130
 
+
     # Check if Bank response is valid or Error 
     if "account" and "vcc_amount" and "vcc_file" in returnMessage:
         # Valid message
+        
+        path = f"{current_working_directory}/src/MBec/creditCard/{returnMessage['vcc_file']}"
+        
+        #send rollback to server
+        if os.path.isfile(path) and account != returnMessage["account"] and amount != returnMessage["vcc_amount"] :
+            return 130
+        
+        messageEncripedPublicKeyBank = encryptDataWithPublicKey(publicKeyBank,signedMessage["message"])
+        signature = signwithPrivateKey(privateKey,messageEncripedPublicKeyBank)
+        contentFile = pickle.dumps({"ip": ipBankAddress, "port": bkPort, "message":messageEncripedPublicKeyBank, "signature": signature })
+        
+        file = open(path,"wb")
+        file.write(contentFile)
+        file.close()
+                
         return returnMessage
     else:
         # Error from Bank
@@ -346,6 +361,7 @@ def withdrawMode(argv:list[str]):
     if "-v" in argv:
         virtualCreditCardFile = argv[argv.index("-v")+1]
     else:
+        #find file
         return 130
     
 
@@ -376,28 +392,31 @@ def withdrawMode(argv:list[str]):
     if shoppingValue <= 0:
         return 130
 
-    #{IP:PORT}
-    #(EPublic_Bank{account}.sign(mbec))
+    #if -v is not given
     
-    #sign with private key
-    #Bank has public from MBEC
-    #Verify
-    #Atacante nao tem chave privada de outro client
+    filePath = f"{current_working_directory}/src/MBec/creditCard/{virtualCreditCardFile}"
     
-    #{"message": , "signature": lida do ficheiro }
+    if not os.path.isfile(filePath):
+        return 130
     
+    with open(filePath, "rb") as file:
+        content = file.read()
+        file.close()
     
     
     # Generate message
-    withdrawCard = json.dumps({
+    withdrawCard = pickle.dumps({
         "MessageType": "WithdrawCard",
-        "CreditCardFile": virtualCreditCardFile,
-        "ShoppingValue": shoppingValue,
-    }).encode('utf8')
+        "contentFile": content
+    })
     
-    # Send receive message from Bank
-    messageEncode = sendMessage(ipStoreAddress,stPort,withdrawCard)
+    # Send receive message to Store
+    messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard)
     
+    
+    #recebe ligação do banco
+    #autenticação mutua
+    #Ok
     returnMessage = json.loads(messageEncode.decode('utf8'))
     
 
