@@ -4,6 +4,7 @@ import hashlib
 import pickle
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 import cryptography
+import os
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
@@ -120,6 +121,8 @@ def generateSelfSignedCert(privateKey, path:str):
     with open(path, "wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
 
+    with open(f"{os.getcwd()}/src/MBec/bank.auth","wb") as f:
+        f.write(cert.public_bytes(serialization.Encoding.PEM))
         
     return cert
     

@@ -16,6 +16,7 @@ Project done with python
 - Add authentication between user and bank
 - Use different IVs for encrypton
 - Make sure the project can be compiled from zero in a VM 
+- Hashes em algum lado
 
 # Git commands
 

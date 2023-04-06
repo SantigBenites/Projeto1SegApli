@@ -6,6 +6,7 @@ from Cripto import *
 from MBecConnection import sendMessage
 
 current_working_directory = os.getcwd()
+lastUsedAccount = None
 
 def newAccountMode(argv:list[str]):
 
@@ -95,6 +96,7 @@ def newAccountMode(argv:list[str]):
 
     # Check if Bank response is valid or Error 
     if "account" in returnMessage and "initial_balance" in returnMessage:
+        lastUsedAccount=account
         return returnMessage
     else:
         # Error from Bank
@@ -179,6 +181,7 @@ def depositMode(argv:list[str]):
     
     
     if "account" in receivedMessage and "deposit" in receivedMessage:
+        lastUsedAccount=account
         return receivedMessage
         
     else:
@@ -324,6 +327,7 @@ def getBalanceMode(argv:list[str]):
     receivedMessage = json.loads(signedMessage["message"].decode('utf8'))
     
     if "account" in receivedMessage and "balance" in receivedMessage:
+        lastUsedAccount=account
         return receivedMessage
     else:
         return 130
