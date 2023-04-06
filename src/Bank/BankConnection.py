@@ -58,20 +58,25 @@ def receiveMessage(connection:socket):
 
     # Receive cyphertext from client
     cipherText = connection.recv(5000)
- 
+
+    # Separe iv and ciphertext
+    iv = cipherText[:AES.block_size]
+    ciphertext = cipherText[AES.block_size:]
+
     #Setup decryption and unpadding
-    cipher = AES.new(derived_key, AES.MODE_CFB,bytes([16])*16)
-    plaintext = cipher.decrypt(cipherText)
+    cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+    plaintext = cipher.decrypt(ciphertext)
 
     return plaintext,derived_key
 
 def sendMessage(connection:socket,data,derived_key):
 
     #Setup decryption and unpadding
-    cipher = AES.new(key=derived_key, mode=AES.MODE_CFB, iv=bytes([16])*16)
-    ciphertext = cipher.encrypt(data)
+    iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+    cipher = AES.new(key=derived_key, mode=AES.MODE_CFB, iv=iv)
+    cipherText = iv + cipher.encrypt(data)
 
-    connection.sendall(ciphertext)
+    connection.sendall(cipherText)
 
 
 def ephemeralEllipticCurveDiffieHellmanReceiving(connection):
