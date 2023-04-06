@@ -13,11 +13,10 @@ Project done with python
 - Cipher amount account of vcc file, with bank public key +
 - Read data from vcc file 
 - Client sign content of vcc file when it receives it
-- Make sure client is always active and can accept multiple operations
-- Add authentication between user and bank -- 95% certeza
-- Use different IVs for encrypton
+- Add authentication between user and bank !!! 95 % certeza !!!
 - Make sure the project can be compiled from zero in a VM 
 - Hashes em algum lado
+- Implement RollBack
 
 # Git commands
 
