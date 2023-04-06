@@ -75,6 +75,12 @@ def createCardMode(signedMessage, message):
     accountName = message["account"]
     amount = message["amount"]
     
+    PublickeyUser = storage.getPublicKeyUser(accountName)
+    
+    if(PublickeyUser == None):
+        return json.dumps({"Error":130}).encode('utf8')
+
+    
     # Checking for account balance
     accountBalance = storage.getAccountBalance(accountName)
     if amount > accountBalance:
@@ -84,10 +90,6 @@ def createCardMode(signedMessage, message):
     if bool:
         return json.dumps({"Error":130}).encode('utf8')
     
-    PublickeyUser = storage.getPublicKeyUser(accountName)
-    
-    if(PublickeyUser == None):
-        return json.dumps({"Error":130}).encode('utf8')
 
     if not verifySignature(PublickeyUser,signedMessage["signature"],signedMessage["message"]):
          return json.dumps({"Error":130}).encode('utf8')
