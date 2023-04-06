@@ -277,9 +277,14 @@ def createCardMode(argv:list[str]):
         if os.path.isfile(path) and account != returnMessage["account"] and amount != returnMessage["vcc_amount"] :
             return 130
         
+        
+        
         messageEncripedPublicKeyBank = encryptDataWithPublicKey(publicKeyBank,signedMessage["message"])
-        signature = signwithPrivateKey(privateKey,messageEncripedPublicKeyBank)
-        contentFile = pickle.dumps({"ip": ipBankAddress, "port": bkPort, "message":messageEncripedPublicKeyBank, "signature": signature })
+        
+        encriptedWithMessageType = pickle.dumps({"MessageType":"WithdrawCard", "encrypted": messageEncripedPublicKeyBank})
+        
+        signature = signwithPrivateKey(privateKey,encriptedWithMessageType)
+        contentFile = pickle.dumps({"ip": ipBankAddress, "port": bkPort, "message":encriptedWithMessageType, "signature": signature })
         
         file = open(path,"wb")
         file.write(contentFile)
@@ -402,8 +407,7 @@ def withdrawMode(argv:list[str]):
     with open(filePath, "rb") as file:
         content = file.read()
         file.close()
-    
-    
+
     # Generate message
     withdrawCard = pickle.dumps({
         "MessageType": "WithdrawCard",

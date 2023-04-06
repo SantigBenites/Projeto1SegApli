@@ -68,19 +68,23 @@ def sendMessageToBank(destIP:str, destPort:int, message: str):
         derived_key = ephemeralEllipticCurveDiffieHellmanSending(s)
 
         #Setup encryption and unpadding
-        cipher = AES.new(derived_key, AES.MODE_CFB,bytes([16])*16)
-        cipherText = cipher.encrypt(message)
-
+        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        cipherText = iv + cipher.encrypt(message)
+        
         # Send receive
         s.send(cipherText)
         data = s.recv(5000)
 
         #Setup decryption and unpadding
-        cipher = AES.new(key=derived_key, mode=AES.MODE_CFB,iv=bytes([16])*16)
-        plaintext = cipher.decrypt(data)
+        # Separe iv and ciphertext
+        iv = data[:AES.block_size]
+        ciphertext = data[AES.block_size:]
 
-
-    return plaintext
+        #Setup decryption and unpadding
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        plaintext = cipher.decrypt(ciphertext)
+        return plaintext
 
 
 def ephemeralEllipticCurveDiffieHellmanSending(s:socket):

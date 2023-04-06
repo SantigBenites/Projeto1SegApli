@@ -24,19 +24,23 @@ def main(argv: list[str]):
             (conn, addr) = receiveNewConnection(socket)
             
             receiveMsg,derived_key = receiveMessage(conn)
+
             
             withdrawCardMessage = pickle.loads(receiveMsg)
+            print(withdrawCardMessage)
             
-            if "MessageType" and "content" in withdrawCardMessage:
+            if "MessageType" and "contentFile" in withdrawCardMessage:
                 if withdrawCardMessage["MessageType"] == "WithdrawCard":
                     
-                    fileContent = pickle.loads(withdrawCardMessage["content"])
+                    fileContent = pickle.loads(withdrawCardMessage["contentFile"])
+                    
+                    print(fileContent)
                     
                     if "ip" and "port" and "message" and"signature" not in fileContent:
                         #erro
                         return
                     #messagetoAuthenticate has to have a MessageType
-                    messageToAuthenticate = pickle.loads({"message": fileContent["message"], "signature": fileContent["signature"]})
+                    messageToAuthenticate = pickle.dumps({"message": fileContent["message"], "signature": fileContent["signature"]})
                     
                     data = sendMessageToBank(fileContent["ip"],fileContent["port"],messageToAuthenticate)
                     
