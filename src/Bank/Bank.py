@@ -1,10 +1,12 @@
 import pickle
-import socket, sys, getopt, signal, json
+import socket, sys, getopt, signal, json, threading, logging
+from subprocess import *
 from BankConnection import *
 from BankModes import *
 from BankStorage import *
 from utils import *
 from Cripto import *
+#from _thread import *
 
 loopBool = True
 
@@ -33,6 +35,10 @@ def main(argv:list[str]):
 
     # Start Storage
     storage = BankStorageSingleton()
+    # Start sys out lock
+    lock = threading.Lock()
+    # Current Threads
+    threads:list[threading.Thread] = []
 
     try:
         while loopBool:
@@ -41,45 +47,64 @@ def main(argv:list[str]):
             #nao tem chave plica para comparar
 
             (conn,addr) = receiveNewConnection(socket,privateKey)
-            message,derived_key = receiveMessage(conn)
-            Signedmessage = pickle.loads(message)
+            x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey))
+            threads.append(x)
+            x.start()
+            x.join()
             
-            print(message)
-            if "message" and "signature" in Signedmessage:
-                message = json.loads(Signedmessage["message"].decode())
-                print(message)
-                if "MessageType" in message:
-                    match message["MessageType"]:
-                        case "NewAccount":
-                            response = newAccountMode(Signedmessage,message)
-                            responseSigned = signedMessage(response,privateKey)
-                            sendMessage(conn,responseSigned,derived_key)
-                        case "Deposit":
-                            response = depositMode(Signedmessage,message)
-                            responseSigned = signedMessage(response,privateKey)
-                            sendMessage(conn, responseSigned,derived_key)
-                        case "Balance":
-                            response = getBalanceMode(Signedmessage,message)
-                            responseSigned = signedMessage(response,privateKey)
-                            sendMessage(conn, responseSigned,derived_key)
-                        case "CreateCard":
-                            response = createCardMode(Signedmessage,message)
-                            responseSigned = signedMessage(response,privateKey)
-                            sendMessage(conn,responseSigned,derived_key)
-                        case "WithdrawCard":
-                            response = withdrawMode(Signedmessage,message)
-                            responseSigned = signedMessage(response,privateKey)
-                            sendMessage(conn,responseSigned,derived_key)
-
-                    print(response)
-            conn.close()
     except KeyboardInterrupt:
+        # Ending properly
+        
+        # Printing current storage
         print("Ended Properly")
         print(f"Storage: \n {storage.users}")
+        
+        # Removing userFiles automatically, to remove in final version
+        call(["python", "src/clearUserFiles.py"])
+
+        # Joining threads
+        for thr in threads:
+            thr.join()
+
+        # 
         if 'conn' in locals():
             conn.close()
         sys.exit()
 
+
+def new_threaded_client(conn,lock,privateKey):
+    message,derived_key = receiveMessage(conn)
+    Signedmessage = pickle.loads(message)
+    if "message" and "signature" in Signedmessage:
+        message = json.loads(Signedmessage["message"].decode())
+
+        if "MessageType" in message:
+            match message["MessageType"]:
+                case "NewAccount":
+                    response = newAccountMode(Signedmessage,message)
+                    responseSigned = signedMessage(response,privateKey)
+                    sendMessage(conn,responseSigned,derived_key)
+                case "Deposit":
+                    response = depositMode(Signedmessage,message)
+                    responseSigned = signedMessage(response,privateKey)
+                    sendMessage(conn, responseSigned,derived_key)
+                case "Balance":
+                    response = getBalanceMode(Signedmessage,message)
+                    responseSigned = signedMessage(response,privateKey)
+                    sendMessage(conn, responseSigned,derived_key)
+                case "CreateCard":
+                    response = createCardMode(Signedmessage,message)
+                    responseSigned = signedMessage(response,privateKey)
+                    sendMessage(conn,responseSigned,derived_key)
+                case "WithdrawCard":
+                    response = withdrawMode(Signedmessage,message)
+                    responseSigned = signedMessage(response,privateKey)
+                    sendMessage(conn,responseSigned,derived_key)
+
+    with lock:
+        print(response)
+        sys.stdout.flush()
+    conn.close()
 
 def exit(_signo, _stack_frame):
     sys.exit()

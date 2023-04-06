@@ -44,7 +44,6 @@ def verifySignature(publicKey, signature, message):
             hashes.SHA256()
             )
     except cryptography.exceptions.InvalidSignature:
-        print("Invalide signature")
         return False
     return True
 
@@ -87,7 +86,6 @@ def uploadPublicKeyToFile(publickey,path:str):
     file = open(path,"wb")
     file.write(pem)
     file.close()
-    print("created")
     
 def readPublicKeyFromFile(path:str):
     with open("auth", "rb") as key_file:
@@ -121,7 +119,7 @@ def generateSelfSignedCert(privateKey, path:str):
     
     with open(path, "wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
-    print("created")
+
         
     return cert
     

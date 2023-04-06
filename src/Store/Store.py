@@ -22,7 +22,7 @@ def main(argv: list[str]):
 
             (conn, addr) = receiveNewConnection(socket)
             
-            message = receiveMessage(conn)
+            message,derived_key = receiveMessage(conn)
             
             messagel = json.loads(message.decode('utf8'))
             
@@ -32,7 +32,7 @@ def main(argv: list[str]):
                 message = json.loads(data.decode('utf8'))
                 
                 print(message)
-                sendMessage(conn,data)
+                sendMessage(conn,data,derived_key)
             
             
     
