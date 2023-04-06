@@ -1,3 +1,4 @@
+import pickle
 import secrets
 import sys, socket, json, os
 from utils import *
@@ -47,45 +48,58 @@ def newAccountMode(argv:list[str]):
     if balance < 15:
         return 130
     
+    #checks the existence of authFile
+    pathAuthFile =f"{current_working_directory}/src/MBec/{authFile}"
+    
+    if  not os.path.isfile(pathAuthFile):
+        return 130
+    
     if os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
         return 130
     
     pathUserFile =f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
     
-    s  = secrets.token_bytes(1000)
+    privateKey = getPrivateKey()
+    uploadPrivateKeyToFile(privateKey,pathUserFile)
     
-    uFile = open(pathUserFile, "a")
-    uFile.write(str(s))
-    uFile.close()
+    publicKey = getPublicKey(privateKey)
     
+    pem = publicKey.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
     
-    h = hashFile(pathUserFile)
     # Generate message
     newAccountMessage = json.dumps({
         "MessageType": "NewAccount",
         "account": account,
         "balance": balance,
-        "fileName": userFile,
-        "content" : str(s)
+        "publicKey" : pem.decode()
     }).encode('utf8')
-
+    
+    #reads public Key
+    publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
 
     # Send receive message from Bank
-    messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage)
-    returnMessage = json.loads(messageEncode.decode('utf8'))
+    messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage,privateKey,publicKeyBank)
+    
+    signedMessage = pickle.loads(messageEncode)
+    
+    if "message" and "signature" not in signedMessage:
+        return 130
+    
+    returnMessage = json.loads(signedMessage["message"].decode('utf8'))
+    
+    if not verifySignature(publicKeyBank,signedMessage["signature"],signedMessage["message"]):
+        return 130
 
     # Check if Bank response is valid or Error 
     if "account" in returnMessage and "initial_balance" in returnMessage:
-
-        # Create user file
-        userFile = open(f"{current_working_directory}/src/MBec/usersFiles/{userFile}", "a")
-        userFile.close()
-
         return returnMessage
     else:
-
         # Error from Bank
         return 130
+
 
 
 
@@ -134,16 +148,35 @@ def depositMode(argv:list[str]):
         print ("Invalid Amount") 
         return 130
         
-    if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
+    filePath = f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
+    if not os.path.isfile(filePath):
         print(f"Error num 130")
         return 130
     
+    #checks the existence of authFile
+    pathAuthFile =f"{current_working_directory}/src/MBec/{authFile}"
     
-    h = hashFile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}")
+    if  not os.path.isfile(pathAuthFile):
+        return 130
+    
+    #reads public Key
+    publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
+    
+    
+    privateKey = readPrivateKeyFromFile(filePath)
 
-    m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account, "file":h})
+    m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
     
-    receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
+    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8'),privateKey,publicKeyBank))
+    
+    if "message" and "signature" not in signedMessage:
+        return 130
+    
+    receivedMessage = json.loads(signedMessage["message"].decode('utf8'))
+    
+    if not verifySignature(publicKeyBank,signedMessage["signature"],signedMessage["message"]):
+        return 130
+    
     
     if "account" in receivedMessage and "deposit" in receivedMessage:
         return receivedMessage
@@ -192,26 +225,44 @@ def createCardMode(argv:list[str]):
         return 130
 
     # Check if user file already exists
-    if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
+    filePath = f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
+    if not os.path.isfile(filePath):
+        print(f"Error num 130")
         return 130
+    
+    #checks the existence of authFile
+    pathAuthFile =f"{current_working_directory}/src/MBec/{authFile}"
+    
+    if  not os.path.isfile(pathAuthFile):
+        return 130
+    
+    #reads public Key
+    publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
+    
+    privateKey = readPrivateKeyFromFile(filePath)
 
     # Check if credit card initial amount is above 0
     if amount <= 0:
         return 130
     
-    h = hashFile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}")
-
     # Generate message
     newCardMessage = json.dumps({
         "MessageType": "CreateCard",
         "account": account,
-        "amount": amount,
-        "file": h
+        "amount": amount
     }).encode('utf8')
 
     # Send receive message from Bank
-    messageEncode = sendMessage(ipBankAddress,bkPort,newCardMessage)
-    returnMessage = json.loads(messageEncode.decode('utf8'))
+    messageEncode = sendMessage(ipBankAddress,bkPort,newCardMessage,privateKey,publicKeyBank)
+    signedMessage = pickle.loads(messageEncode)
+
+    if "message" and "signature" not in signedMessage:
+        return 130
+    
+    returnMessage = json.loads(signedMessage["message"].decode('utf8'))
+
+    if not verifySignature(publicKeyBank,signedMessage["signature"],signedMessage["message"]):
+        return 130
 
     # Check if Bank response is valid or Error 
     if "account" and "vcc_amount" and "vcc_file" in returnMessage:
@@ -237,8 +288,20 @@ def getBalanceMode(argv:list[str]):
     bkPort = int(argv[argv.index("-p") + 1]) if "-p" in argv else 3000
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
     
-    if not os.path.isfile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}"):
+    
+    filePath = f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
+    if not os.path.isfile(filePath):
         return 130
+    
+    #checks the existence of authFile
+    pathAuthFile =f"{current_working_directory}/src/MBec/{authFile}"
+    if  not os.path.isfile(pathAuthFile):
+        return 130
+    
+    #reads public Key
+    publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
+
+    privateKey = readPrivateKeyFromFile(filePath)
     
     # All Validation for all inputs
     if  not (
@@ -248,11 +311,17 @@ def getBalanceMode(argv:list[str]):
         argsAreValidPort(bkPort) and 
         argsAreValidFileNames(authFile)):
             return 130
-    h = hashFile(f"{current_working_directory}/src/MBec/usersFiles/{userFile}")
-        
-    m = json.dumps({"MessageType": "Balance", "account":account, "file": h})
+     
+    m = json.dumps({"MessageType": "Balance", "account":account})
     
-    receivedMessage = json.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8')).decode('utf8'))
+    
+    
+    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8'),privateKey,publicKeyBank))
+    
+    if "message" and "signature" not in signedMessage:
+        return 130
+    
+    receivedMessage = json.loads(signedMessage["message"].decode('utf8'))
     
     if "account" in receivedMessage and "balance" in receivedMessage:
         return receivedMessage
@@ -303,7 +372,18 @@ def withdrawMode(argv:list[str]):
     if shoppingValue <= 0:
         return 130
 
-
+    #{IP:PORT}
+    #(EPublic_Bank{account}.sign(mbec))
+    
+    #sign with private key
+    #Bank has public from MBEC
+    #Verify
+    #Atacante nao tem chave privada de outro client
+    
+    #{"message": , "signature": lida do ficheiro }
+    
+    
+    
     # Generate message
     withdrawCard = json.dumps({
         "MessageType": "WithdrawCard",

@@ -1,3 +1,4 @@
+import pickle
 import socket, sys, getopt, signal, json
 from BankConnection import *
 from BankModes import *
@@ -35,30 +36,42 @@ def main(argv:list[str]):
 
     try:
         while loopBool:
-
-            (conn,addr) = receiveNewConnection(socket)
-            message,derived_key = receiveMessage(conn)
-            message = json.loads(message.decode('utf8'))
             
-            if "MessageType" in message:
-                match message["MessageType"]:
-                    case "NewAccount":
-                        response = newAccountMode(message)
-                        sendMessage(conn,response,derived_key)
-                    case "Deposit":
-                        response = depositMode(message)
-                        sendMessage(conn, response,derived_key)
-                    case "Balance":
-                        response = getBalanceMode(message)
-                        sendMessage(conn, response,derived_key)
-                    case "CreateCard":
-                        response = createCardMode(message)
-                        sendMessage(conn,response,derived_key)
-                    case "WithdrawCard":
-                        response = withdrawMode(message)
-                        sendMessage(conn,response,derived_key)
+            #nao podes fazer verificação da assinatura AQUI!!!
+            #nao tem chave plica para comparar
 
-                print(response)
+            (conn,addr) = receiveNewConnection(socket,privateKey)
+            message,derived_key = receiveMessage(conn)
+            Signedmessage = pickle.loads(message)
+            
+            print(message)
+            if "message" and "signature" in Signedmessage:
+                message = json.loads(Signedmessage["message"].decode())
+                print(message)
+                if "MessageType" in message:
+                    match message["MessageType"]:
+                        case "NewAccount":
+                            response = newAccountMode(Signedmessage,message)
+                            responseSigned = signedMessage(response,privateKey)
+                            sendMessage(conn,responseSigned,derived_key)
+                        case "Deposit":
+                            response = depositMode(Signedmessage,message)
+                            responseSigned = signedMessage(response,privateKey)
+                            sendMessage(conn, responseSigned,derived_key)
+                        case "Balance":
+                            response = getBalanceMode(Signedmessage,message)
+                            responseSigned = signedMessage(response,privateKey)
+                            sendMessage(conn, responseSigned,derived_key)
+                        case "CreateCard":
+                            response = createCardMode(Signedmessage,message)
+                            responseSigned = signedMessage(response,privateKey)
+                            sendMessage(conn,responseSigned,derived_key)
+                        case "WithdrawCard":
+                            response = withdrawMode(Signedmessage,message)
+                            responseSigned = signedMessage(response,privateKey)
+                            sendMessage(conn,responseSigned,derived_key)
+
+                    print(response)
             conn.close()
     except KeyboardInterrupt:
         print("Ended Properly")

@@ -1,32 +1,31 @@
 import os, random, json, re
+import pickle
+import secrets
+import socket
 from BankStorage import *
 from Cripto import *
+from Authentication import *
 
 current_working_directory = os.getcwd()
 
-def newAccountMode(message):
+def newAccountMode(signedMessage, message):
     
-    if "account" and "balance" and "fileName" and "content" not in message:
+    if "account" and "balance" and "publicKey" not in message:
         return json.dumps({"Error":130}).encode('utf8')
+        
+    
+    PublicKeyUser = serialization.load_pem_public_key(
+        message["publicKey"].encode()
+    )
+    
+    #Authentication
+    if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
+         return json.dumps({"Error":130}).encode('utf8')
+
 
     storage = BankStorageSingleton()
     accountName = message["account"]
     balance = message["balance"]
-    userFileName = message["fileName"]
-    userFileContent = message ["content"]
-
-    # Checking user file doesn't exist
-    if os.path.isfile(f"{current_working_directory}/src/Bank/users/{userFileName}"):
-        return json.dumps({"Error":130}).encode('utf8')
-
-    # Creating user file
-    userPath = f"{current_working_directory}/src/Bank/users/{userFileName}"
-    userFile = open(userPath, "a")
-    userFile.write(userFileContent)
-    userFile.close()
-    
-    h = hashFile(userPath)
-    
 
     # Generating response
     newAccountResponse = json.dumps({
@@ -35,80 +34,68 @@ def newAccountMode(message):
     }).encode('utf8')
 
     # Updating runtime database
-    storage.newAccount(accountName,userPath,h)
+    storage.newAccount(accountName,PublicKeyUser)
     storage.addAccountBalance(accountName,balance)
 
     return newAccountResponse
 
-def depositMode(message):
+def depositMode(signedMessage, message):
     
-    if "account" and "Amount" and "file" not in message:
-        return json.dumps({"Error":130}).encode('utf8')
-    
+    if "account" and "Amount" not in message:
+        return  json.dumps({"Error":130}).encode('utf8')
+
     storage = BankStorageSingleton()
     account = message["account"]
     deposit = message["Amount"]
-    hashFromUser = message["file"]
     
-    ph = storage.getHashPathUser(account)
+    PublicKeyUser = storage.getPublicKeyUser(account)
     
-    if(ph == None):
-        response = json.dumps({"Error":130}).encode('utf8')
+    if(PublicKeyUser == None):
+        return json.dumps({"Error":130}).encode('utf8')
         
-    (path, hash) = ph
     
+    #Authentication
+    if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
+        return json.dumps({"Error":130}).encode('utf8')
     
-    #nedds to verify the userFile corresponds to account
-    if(os.path.isfile(path)) and hash == hashFromUser:
-        storage.addAccountBalance(account,deposit)
-        response = json.dumps({"account":account, "deposit":deposit}).encode('utf8')
-    else:
-        response = json.dumps({"Error":130}).encode('utf8')
+    storage.addAccountBalance(account,deposit)
+    
+
+    response = json.dumps({"account":account, "deposit":deposit}).encode('utf8')
 
     return response
 
 # Example: {"account":"55555","vcc_amount":12.00, "vcc_file":"55555_2.card"}
-def createCardMode(message):
+def createCardMode(signedMessage, message):
     
-    if "account" and "amount" and "file" not in message:
+    if "account" and "amount" not in message:
         return json.dumps({"Error":130}).encode('utf8')
 
     storage = BankStorageSingleton()
     accountName = message["account"]
     amount = message["amount"]
-    hashFromUser = message["file"]
     
     # Checking for account balance
     accountBalance = storage.getAccountBalance(accountName)
     if amount > accountBalance:
         return json.dumps({"Error":130}).encode('utf8')
-    
     # Check for other active credit cards
     bool = storage.areActiveCards(accountName)
     if bool:
         return json.dumps({"Error":130}).encode('utf8')
     
-    ph = storage.getHashPathUser(accountName)
+    PublickeyUser = storage.getPublicKeyUser(accountName)
     
-    if(ph == None):
+    if(PublickeyUser == None):
         return json.dumps({"Error":130}).encode('utf8')
-    
-    (path,hash) = ph
-    
-    if hash != hashFromUser:
-        return json.dumps({"Error":130}).encode('utf8')
-    
-    
- 
+
+    if not verifySignature(PublickeyUser,signedMessage["signature"],signedMessage["message"]):
+         return json.dumps({"Error":130}).encode('utf8')
     # Getting card name
     numberOfCardForAccount = storage.getCreditCardNumber(accountName) + 1
     cardName = f"{accountName}_{numberOfCardForAccount}"
-
-    # Creating credit card file
-    cardPath = f"{current_working_directory}/src/Bank/creditCards/{cardName}.card"
-    cardFile = open(cardPath, "a")
-    cardFile.write(accountName)
-    cardFile.close()
+    
+    #criar dados e enviar para mbec
 
     # Generating response
     newCardResponse = json.dumps({
@@ -118,39 +105,35 @@ def createCardMode(message):
     }).encode('utf8')
 
     # Updating runtime database
-    storage.addCreditCard(accountName,cardPath,amount)
-
+    storage.addCreditCard(accountName,cardName,amount)
+    
     return newCardResponse
 
 
-def getBalanceMode(message):
+def getBalanceMode(signedMessage, message):
     
-    if "account" and "file" not in message:
+    if "account"  not in message:
         return json.dumps({"Error":130}).encode('utf8')
     
     account = message["account"]
-    hashFromUser = message["file"]
     
     storage = BankStorageSingleton()
     
-    ph = storage.getHashPathUser(account)
+    publicKeyUser = storage.getPublicKeyUser(account)
     
-    if(ph == None):
-        message = json.dumps({"Error":130})
+    if(publicKeyUser == None):
+        return json.dumps({"Error":130}).encode('utf8')
         
-    (pathFile,hash) = ph
-    
-    if os.path.isfile(pathFile) and hash == hashFromUser :
-        response = json.dumps({"account": account, "balance": storage.getAccountBalance(account)})
+    if not verifySignature(publicKeyUser,signedMessage["signature"],signedMessage["message"]):
+        return json.dumps({"Error":130}).encode('utf8')
+     
+    response = json.dumps({"account": account, "balance": storage.getAccountBalance(account)})
         
-    else:
-        message = json.dumps({"Error":130})
-    
     return response.encode('utf8')
     
 
 
-def withdrawMode(message):
+def withdrawMode(signedMessage, message):
     
     if "CreditCardFile" and "ShoppingValue" not in message:
         return json.dumps({"Error":130}).encode('utf8')

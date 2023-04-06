@@ -7,6 +7,7 @@ from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 from cryptography.hazmat.primitives import hashes
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad, pad
+from Cripto import *
 #from utils import pad,unpad
 
 # Generate an ephemeral elliptic curve key pair
@@ -28,10 +29,24 @@ def createSocket(host="127.0.0.1",port=3000):
     s.listen()
     return s
 
-def receiveNewConnection(socket:socket.socket):
+def receiveNewConnection(socket:socket.socket,privateKey):
 
     socket.listen()
+    
     conn, addr = socket.accept()
+    #autenticação servidor
+    
+    nounce = conn.recv(1024)
+    
+    nounceSigned = signwithPrivateKey(privateKey,nounce)
+    
+    conn.sendall(nounceSigned)
+    
+    
+    #recebe nonce do cliente
+    #bank assina
+    #cliente 
+    #
     return (conn,addr)
 
 
@@ -43,7 +58,7 @@ def receiveMessage(connection:socket):
 
     # Receive cyphertext from client
     cipherText = connection.recv(5000)
-
+ 
     #Setup decryption and unpadding
     cipher = AES.new(derived_key, AES.MODE_CFB,bytes([16])*16)
     plaintext = cipher.decrypt(cipherText)

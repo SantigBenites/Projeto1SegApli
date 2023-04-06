@@ -1,3 +1,5 @@
+import pickle
+import secrets
 import socket, os, json, base64
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
@@ -7,36 +9,47 @@ from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 from cryptography.hazmat.primitives import hashes
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
+from Cripto import *
 #from utils import pad,unpad
 
 current_working_directory = os.getcwd()
 
-def sendMessage(destIP:str, destPort:int, message: str):
+def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBank):
+    
+    nouce = secrets.token_bytes(100)
     
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        
         # Start Connection
         s.connect((destIP, destPort))
+        s.sendall(nouce)
+        nounceSigned = s.recv(1024)
+        
+        #verify signature from server
+        if verifySignature(publicKeyBank,nounceSigned,nouce):
 
-        #Get EECDF shared secret
-        derived_key = ephemeralEllipticCurveDiffieHellmanSending(s)
+            #Get EECDF shared secret
+            derived_key = ephemeralEllipticCurveDiffieHellmanSending(s)
+            
+            #sign message
+            signature = signwithPrivateKey(privateKey,message)
+            
+            m = pickle.dumps({"message":message,"signature":signature})
 
-        #Setup encryption and unpadding
-        cipher = AES.new(derived_key, AES.MODE_CFB,bytes([16])*16)
-        cipherText = cipher.encrypt(message)
+            #Setup encryption and unpadding
+            cipher = AES.new(derived_key, AES.MODE_CFB,bytes([16])*16)
+            cipherText = cipher.encrypt(m)
+            
+            # Send receive
+            s.sendall(cipherText)
+            data = s.recv(5000)
 
-        # Send receive
-        s.send(cipherText)
-        data = s.recv(5000)
-
-        #Setup decryption and unpadding
-        cipher = AES.new(key=derived_key, mode=AES.MODE_CFB,iv=bytes([16])*16)
-        plaintext = cipher.decrypt(data)
-
-
-    return plaintext
-
+            #Setup decryption and unpadding
+            cipher = AES.new(key=derived_key, mode=AES.MODE_CFB,iv=bytes([16])*16)
+            plaintext = cipher.decrypt(data)
+            return plaintext
+    
+        
 
 def ephemeralEllipticCurveDiffieHellmanSending(s:socket):
 
