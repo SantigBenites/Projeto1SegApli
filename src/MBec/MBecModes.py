@@ -405,14 +405,14 @@ def withdrawMode(argv:list[str]):
         return 130
     
     with open(filePath, "rb") as file:
-        content = file.read()
-        file.close()
+        json_obj = json.loads(json.dumps(pickle.load(file), default=str))
 
     # Generate message
     withdrawCard = pickle.dumps({
         "MessageType": "WithdrawCard",
-        "contentFile": content
+        "contentFile": json_obj
     })
+    
     
     # Send receive message to Store
     messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard)

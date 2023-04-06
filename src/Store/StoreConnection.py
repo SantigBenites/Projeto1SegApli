@@ -1,3 +1,4 @@
+import secrets
 import socket
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
@@ -7,6 +8,7 @@ from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 from cryptography.hazmat.primitives import hashes
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad, pad
+from Cripto import *
 
 
 # Generate an ephemeral elliptic curve key pair
@@ -57,34 +59,42 @@ def sendMessage(connection:socket,data,derived_key):
 
     connection.sendall(cipherText)
     
-def sendMessageToBank(destIP:str, destPort:int, message: str):
-    
+def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank):
+    nouce = secrets.token_bytes(100)
+
+        
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         
         # Start Connection
         s.connect((destIP, destPort))
-
-        #Get EECDF shared secret
-        derived_key = ephemeralEllipticCurveDiffieHellmanSending(s)
-
-        #Setup encryption and unpadding
-        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
-        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        cipherText = iv + cipher.encrypt(message)
         
-        # Send receive
-        s.send(cipherText)
-        data = s.recv(5000)
+        s.sendall(nouce)
+        nounceSigned = s.recv(1024)
+        
+        #verify signature from server
+        if verifySignature(publicKeyBank,nounceSigned,nouce):
 
-        #Setup decryption and unpadding
-        # Separe iv and ciphertext
-        iv = data[:AES.block_size]
-        ciphertext = data[AES.block_size:]
+            #Get EECDF shared secret
+            derived_key = ephemeralEllipticCurveDiffieHellmanSending(s)
 
-        #Setup decryption and unpadding
-        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        plaintext = cipher.decrypt(ciphertext)
-        return plaintext
+            #Setup encryption and unpadding
+            iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            cipherText = iv + cipher.encrypt(message)
+            
+            # Send receive
+            s.send(cipherText)
+            data = s.recv(5000)
+
+            #Setup decryption and unpadding
+            # Separe iv and ciphertext
+            iv = data[:AES.block_size]
+            ciphertext = data[AES.block_size:]
+
+            #Setup decryption and unpadding
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            plaintext = cipher.decrypt(ciphertext)
+            return plaintext
 
 
 def ephemeralEllipticCurveDiffieHellmanSending(s:socket):

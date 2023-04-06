@@ -5,6 +5,7 @@ directories = [
         #"src/Bank/creditCards",
         "src/Bank/auth",
         #"src/MBec/auth"
+        "src/MBec/creditCard"
         ]
 
 for dir in directories:

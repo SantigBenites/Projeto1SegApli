@@ -1,11 +1,12 @@
 import json
+import os
 import pickle
 import socket
 import sys
 from StoreConnection import *
 
 
-
+current_working_directory = os.getcwd()
 def main(argv: list[str]):
     
     IPBANK = "127.0.0.1"
@@ -17,6 +18,12 @@ def main(argv: list[str]):
 
     socket = createSocket(port=stPort)
     
+    pathAuthFile =f"{current_working_directory}/src/MBec/{authFile}"
+    
+    if  not os.path.isfile(pathAuthFile):
+        return 130
+    
+    publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
     
     try:
         while True:
@@ -32,7 +39,7 @@ def main(argv: list[str]):
             if "MessageType" and "contentFile" in withdrawCardMessage:
                 if withdrawCardMessage["MessageType"] == "WithdrawCard":
                     
-                    fileContent = pickle.loads(withdrawCardMessage["contentFile"])
+                    fileContent = withdrawCardMessage["contentFile"]
                     
                     print(fileContent)
                     
@@ -40,9 +47,9 @@ def main(argv: list[str]):
                         #erro
                         return
                     #messagetoAuthenticate has to have a MessageType
-                    messageToAuthenticate = pickle.dumps({"message": fileContent["message"], "signature": fileContent["signature"]})
+                    messageToAuthenticate = pickle.dumps({"message": json.dumps({"MessageType":"WithdrawCard", "content":  fileContent["message"]}).encode(), "signature": fileContent["signature"]})
                     
-                    data = sendMessageToBank(fileContent["ip"],fileContent["port"],messageToAuthenticate)
+                    data = sendMessageToBank(fileContent["ip"],fileContent["port"],messageToAuthenticate,publicKeyBank)
                     
                     message = json.loads(data.decode('utf8'))
                     
