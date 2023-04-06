@@ -66,7 +66,7 @@ def argsAreValidFileNames(str:str):
 
 def argsAreValidAccountNames(str:str):
     validSize = 1 < len(str) < 127
-    validChars = True if re.search("[_\-\.0-9a-z]+",str) else False
+    validChars = True if re.search("^[0-9]+$",str) else False
     return validSize and validChars
 
 def argsAreValidIPv4(str:str):

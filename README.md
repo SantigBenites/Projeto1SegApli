@@ -9,6 +9,10 @@ Project done with python
 - Setup files
 - Add more needed verifications like time part of message
 - Vcc file in user
+- Add IP:Port of bank to Vcc file
+- Cipher amount account of vcc file, with bank public key
+- Client sign content of vcc file when it receives it
+- Make sure client is always active and can accept multiple operations
 - Add authentication between user and bank
 - Use different IVs for encrypton
 - Make sure the project can be compiled from zero in a VM 
