@@ -75,11 +75,7 @@ def receiveNewConnection(socket:socket.socket,privateKey):
         conn.close()
         return
     
-    #recebe nonce do cliente
-    #bank assina
-    #cliente 
-    #
-    return (conn,addr,account,PublicKeyClient)
+    return (conn,addr,accountNumber["account"],publicKeyUser)
 
 
 def receiveMessage(connection:socket,PublicKeyClient,privateKey):
