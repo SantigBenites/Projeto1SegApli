@@ -34,8 +34,14 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     socket.listen()
     
     conn, addr = socket.accept()
-    #autenticação servidor
     
+    #recebe {account,chavepublica}
+    #acede a store verifica account
+    #getCHavePublica
+    #nao guarda chave Publica
+    
+    
+#authenticação
     nounce = conn.recv(1024)
     
     nounceSigned = signwithPrivateKey(privateKey,nounce)
@@ -47,8 +53,7 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     #bank assina
     #cliente 
     #
-    return (conn,addr)
-
+    return (conn,addr,account,PuliKeyClient)
 
 
 def receiveMessage(connection:socket):
@@ -88,7 +93,7 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection):
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
-    # Receive the client's public key
+    # Receive the client's public key signed with PEIVATE Key that match priviously send PublickeY
     client_public_key_bytes = connection.recv(1024)
     client_public_key = serialization.load_pem_public_key(
         client_public_key_bytes,

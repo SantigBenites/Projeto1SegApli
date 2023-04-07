@@ -17,6 +17,9 @@ current_working_directory = os.getcwd()
 
 def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBank):
     
+    #encriptação com chave publica
+    #ENC_PK_BANK{account,chavepublica}
+    
     nouce = secrets.token_bytes(100)
     
 

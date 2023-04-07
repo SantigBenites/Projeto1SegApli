@@ -46,8 +46,8 @@ def main(argv:list[str]):
             #nao podes fazer verificação da assinatura AQUI!!!
             #nao tem chave plica para comparar
 
-            (conn,addr) = receiveNewConnection(socket,privateKey)
-            x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey))
+            (conn,addr,account,PuliKeyClient) = receiveNewConnection(socket,privateKey)
+            x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey,account,PuliKeyClient))
             threads.append(x)
             x.start()
             x.join()
@@ -72,34 +72,35 @@ def main(argv:list[str]):
         sys.exit()
 
 
-def new_threaded_client(conn,lock,privateKey):
-    message,derived_key = receiveMessage(conn)
+def new_threaded_client(conn,lock,privateKey,account,PuliKeyClient):
+    message,derived_key = receiveMessage(conn,PuliKeyClient,privateKey)
     Signedmessage = pickle.loads(message)
     if "message" and "signature" in Signedmessage:
         message = json.loads(Signedmessage["message"].decode())
 
         if "MessageType" in message:
-            match message["MessageType"]:
-                case "NewAccount":
-                    response = newAccountMode(Signedmessage,message)
-                    responseSigned = signedMessage(response,privateKey)
-                    sendMessage(conn,responseSigned,derived_key)
-                case "Deposit":
-                    response = depositMode(Signedmessage,message)
-                    responseSigned = signedMessage(response,privateKey)
-                    sendMessage(conn, responseSigned,derived_key)
-                case "Balance":
-                    response = getBalanceMode(Signedmessage,message)
-                    responseSigned = signedMessage(response,privateKey)
-                    sendMessage(conn, responseSigned,derived_key)
-                case "CreateCard":
-                    response = createCardMode(Signedmessage,message)
-                    responseSigned = signedMessage(response,privateKey)
-                    sendMessage(conn,responseSigned,derived_key)
-                case "WithdrawCard":
-                    response = withdrawMode(Signedmessage,message)
-                    responseSigned = signedMessage(response,privateKey)
-                    sendMessage(conn,responseSigned,derived_key)
+            if message["account"] == account:
+                match message["MessageType"]:
+                    case "NewAccount":
+                        response = newAccountMode(Signedmessage,message)
+                        responseSigned = signedMessage(response,privateKey)
+                        sendMessage(conn,responseSigned,derived_key)
+                    case "Deposit":
+                        response = depositMode(Signedmessage,message)
+                        responseSigned = signedMessage(response,privateKey)
+                        sendMessage(conn, responseSigned,derived_key)
+                    case "Balance":
+                        response = getBalanceMode(Signedmessage,message)
+                        responseSigned = signedMessage(response,privateKey)
+                        sendMessage(conn, responseSigned,derived_key)
+                    case "CreateCard":
+                        response = createCardMode(Signedmessage,message)
+                        responseSigned = signedMessage(response,privateKey)
+                        sendMessage(conn,responseSigned,derived_key)
+                    case "WithdrawCard":
+                        response = withdrawMode(Signedmessage,message)
+                        responseSigned = signedMessage(response,privateKey)
+                        sendMessage(conn,responseSigned,derived_key)
 
     with lock:
         print(response)
