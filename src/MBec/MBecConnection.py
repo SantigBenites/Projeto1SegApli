@@ -25,8 +25,9 @@ def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBan
     #encriptação com chave publica
     messageToEncript = pickle.dumps({"account": account})
     messageEnc = encryptDataWithPublicKey(publicKeyBank,messageToEncript)
-
-    messageWithPublicKey = pickle.dumps({messageEnc,pem})
+ 
+    messageWithPublicKey = pickle.dumps({"msg":messageEnc,"pem":pem})
+    print(messageWithPublicKey)
     
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -43,6 +44,7 @@ def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBan
             s.close()
             return
         
+        
         #Authenticates Bank
         nonce = secrets.token_bytes(100)
         s.sendall(nonce)
@@ -51,6 +53,7 @@ def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBan
         if verifySignature(publicKeyBank,nounceSigned,nonce):
             s.sendall("OK".encode())
             #Get EECDF shared secret
+            
             derived_key = ephemeralEllipticCurveDiffieHellmanSending(s)
             
             #sign message

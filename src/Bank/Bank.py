@@ -46,6 +46,7 @@ def main(argv:list[str]):
             #nao podes fazer verificação da assinatura AQUI!!!
             #nao tem chave plica para comparar
 
+
             (conn,addr,account,PublicKeyClient) = receiveNewConnection(socket,privateKey)
             x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey,account,PublicKeyClient))
             threads.append(x)

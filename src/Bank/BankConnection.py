@@ -40,8 +40,11 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     
     #recebe {account,chavepublica}
     received = conn.recv(5000)
-    (receivedmsg,publicKeyBytes) = pickle.loads(received)
-    decripted = decryptWithPrivateKey(privateKey,receivedmsg)
+    print(received)
+    receivedmsg =  pickle.loads(received)
+    encriptedMsg = receivedmsg["msg"]
+    publicKeyBytes = receivedmsg["pem"]
+    decripted = decryptWithPrivateKey(privateKey,encriptedMsg)
     accountNumber = pickle.loads(decripted)
     
     store = BankStorageSingleton()
@@ -57,9 +60,11 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     signedNonce = conn.recv(1024)
     if not verifySignature(publicKeyUser,signedNonce,nonce):
         conn.sendall("NOK".encode())
+        print("NOK")
         conn.close()
     
     conn.sendall("OK".encode())
+    
 
     #Bank Authentication
     nounce = conn.recv(1024)
