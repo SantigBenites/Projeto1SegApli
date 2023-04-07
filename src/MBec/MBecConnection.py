@@ -27,7 +27,6 @@ def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBan
     messageEnc = encryptDataWithPublicKey(publicKeyBank,messageToEncript)
  
     messageWithPublicKey = pickle.dumps({"msg":messageEnc,"pem":pem})
-    print(messageWithPublicKey)
     
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -79,7 +78,6 @@ def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBan
             plaintext = cipher.decrypt(ciphertext)
             return plaintext
         else:
-            print("NOK")
             s.sendall("NOK".encode())
             s.close()
     
@@ -123,14 +121,15 @@ def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBan
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
     signedPublicKey = signwithPrivateKey(privateKey,public_key)
-    s.sendall(pickle.dumps({signedPublicKey,public_key}))
-
+    s.sendall(pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key}))
+    
     # Receive the server's public key
-    signed_server_public_key_bytes,server_public_key_bytes = pickle.loads(s.recv(1024))
+    receivedMessage = pickle.loads(s.recv(1024))
+    signed_server_public_key_bytes,server_public_key_bytes = receivedMessage["signedPublicKey"], receivedMessage["public_key"]
     server_public_key = serialization.load_pem_public_key(server_public_key_bytes)
     
     # Verify signature of signed_server_public_key_bytes and server_public_key_bytes with client private_key
-    if not verifySignature(publicKeyBank,signed_server_public_key_bytes,server_public_key):
+    if not verifySignature(publicKeyBank,signed_server_public_key_bytes,server_public_key_bytes):
         return None
 
     # Generate a shared secret

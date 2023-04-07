@@ -40,7 +40,6 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     
     #recebe {account,chavepublica}
     received = conn.recv(5000)
-    print(received)
     receivedmsg =  pickle.loads(received)
     encriptedMsg = receivedmsg["msg"]
     publicKeyBytes = receivedmsg["pem"]
@@ -60,7 +59,6 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     signedNonce = conn.recv(1024)
     if not verifySignature(publicKeyUser,signedNonce,nonce):
         conn.sendall("NOK".encode())
-        print("NOK")
         conn.close()
     
     conn.sendall("OK".encode())
@@ -117,7 +115,8 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
     signedPublicKey = signwithPrivateKey(privateKey,public_key)
 
     # Receive the client's public key signed with PEIVATE Key that match priviously send PublickeY
-    signed_client_public_key_bytes,client_public_key_bytes = pickle.loads(connection.recv(1024))
+    receivedMessage = pickle.loads(connection.recv(5000))
+    signed_client_public_key_bytes,client_public_key_bytes = receivedMessage["signedPublicKey"], receivedMessage["public_key"]
     client_public_key = serialization.load_pem_public_key(client_public_key_bytes)
     
     # Verify signature of signed_client_public_key and client_public_key with server private_key 
@@ -136,6 +135,6 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
     ).derive(shared_secret)
 
     # Send the server's public key and signed public key to the client
-    connection.sendall(pickle.dumps({signedPublicKey,public_key}))
+    connection.sendall(pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key}))
 
     return derived_key
