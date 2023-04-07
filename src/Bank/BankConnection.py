@@ -70,13 +70,17 @@ def receiveNewConnection(socket:socket.socket,privateKey):
         conn.close()
         return
     
-    return (conn,addr,accountNumber["account"],publicKeyUser)
+    #recebe nonce do cliente
+    #bank assina
+    #cliente 
+    #
+    return (conn,addr,account,PublicKeyClient)
 
 
-def receiveMessage(connection:socket,p,b):
+def receiveMessage(connection:socket,PublicKeyClient,privateKey):
 
     #Get EECDF shared secret
-    derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection)
+    derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,privateKey)
 
     # Receive cyphertext from client
     cipherText = connection.recv(5000)
@@ -101,7 +105,7 @@ def sendMessage(connection:socket,data,derived_key):
     connection.sendall(cipherText)
 
 
-def ephemeralEllipticCurveDiffieHellmanReceiving(connection):
+def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,privateKey):
 
     # Creating Elliptic Curve Public Key 
     private_key = ec.generate_private_key(ec.SECP384R1())
@@ -109,13 +113,15 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection):
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
+    signedPublicKey = signwithPrivateKey(privateKey,public_key)
 
     # Receive the client's public key signed with PEIVATE Key that match priviously send PublickeY
-    client_public_key_bytes = connection.recv(1024)
-    client_public_key = serialization.load_pem_public_key(
-        client_public_key_bytes,
-        #backend=default_backend()
-    )
+    signed_client_public_key_bytes,client_public_key_bytes = pickle.loads(connection.recv(1024))
+    client_public_key = serialization.load_pem_public_key(client_public_key_bytes)
+    
+    # Verify signature of signed_client_public_key and client_public_key with server private_key 
+    if not verifySignature(PublicKeyClient,signed_client_public_key_bytes,client_public_key_bytes):
+        return None
 
     # Generate a shared secret
     shared_secret = private_key.exchange(ec.ECDH(), client_public_key)
@@ -128,7 +134,7 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection):
         otherinfo=None
     ).derive(shared_secret)
 
-    # Send the server's public key to the client
-    connection.sendall(public_key)
+    # Send the server's public key and signed public key to the client
+    connection.sendall(pickle.dumps({signedPublicKey,public_key}))
 
     return derived_key
