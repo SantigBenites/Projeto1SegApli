@@ -88,7 +88,7 @@ def sendMessageToStore(destIP:str, destPort:int, message: str):
         s.connect((destIP, destPort))
         
         #Get EECDF shared secret
-        derived_key = ephemeralEllipticCurveDiffieHellmanSending(s)
+        derived_key = ephemeralEllipticCurveDiffieHellmanStoreSending(s)
         
         #Setup encryption and unpadding
         iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
@@ -131,6 +131,38 @@ def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBan
     # Verify signature of signed_server_public_key_bytes and server_public_key_bytes with client private_key
     if not verifySignature(publicKeyBank,signed_server_public_key_bytes,server_public_key_bytes):
         return None
+
+    # Generate a shared secret
+    shared_secret = private_key.exchange(ec.ECDH(), server_public_key)
+
+    # Derive a key from the shared secret
+    derived_key = ConcatKDFHash(
+    algorithm=hashes.SHA256(),
+    length=32,
+    #salt=None,
+    otherinfo=None
+    ).derive(shared_secret)
+
+    return derived_key
+
+
+def ephemeralEllipticCurveDiffieHellmanStoreSending(s:socket):
+
+    
+
+    # Creating Elliptic Curve Public Key and sending to Server
+    private_key = ec.generate_private_key(ec.SECP384R1())
+    public_key = private_key.public_key().public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo)
+    s.sendall(public_key)
+
+    # Receive the server's public key
+    server_public_key_bytes = s.recv(1024)
+    server_public_key = serialization.load_pem_public_key(
+    server_public_key_bytes,
+    #backend=default_backend()
+    )
 
     # Generate a shared secret
     shared_secret = private_key.exchange(ec.ECDH(), server_public_key)

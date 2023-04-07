@@ -28,3 +28,14 @@ def getPublicKeyFromCertFile(path:str):
         )
         cert_file.close()
     return cert.public_key()
+
+
+def signwithPrivateKey(privateKey, message):
+    return privateKey.sign(
+        message,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )

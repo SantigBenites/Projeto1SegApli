@@ -97,23 +97,27 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank):
             return plaintext
 
 
-def ephemeralEllipticCurveDiffieHellmanSending(s:socket):
+def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBank):
 
     
 
     # Creating Elliptic Curve Public Key and sending to Server
     private_key = ec.generate_private_key(ec.SECP384R1())
     public_key = private_key.public_key().public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo)
-    s.sendall(public_key)
-
-    # Receive the server's public key
-    server_public_key_bytes = s.recv(1024)
-    server_public_key = serialization.load_pem_public_key(
-    server_public_key_bytes,
-    #backend=default_backend()
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
+    signedPublicKey = signwithPrivateKey(privateKey,public_key)
+    s.sendall(pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key}))
+    
+    # Receive the server's public key
+    receivedMessage = pickle.loads(s.recv(1024))
+    signed_server_public_key_bytes,server_public_key_bytes = receivedMessage["signedPublicKey"], receivedMessage["public_key"]
+    server_public_key = serialization.load_pem_public_key(server_public_key_bytes)
+    
+    # Verify signature of signed_server_public_key_bytes and server_public_key_bytes with client private_key
+    if not verifySignature(publicKeyBank,signed_server_public_key_bytes,server_public_key_bytes):
+        return None
 
     # Generate a shared secret
     shared_secret = private_key.exchange(ec.ECDH(), server_public_key)
