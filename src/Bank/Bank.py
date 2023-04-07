@@ -46,8 +46,8 @@ def main(argv:list[str]):
             #nao podes fazer verificação da assinatura AQUI!!!
             #nao tem chave plica para comparar
 
-            (conn,addr,account,PuliKeyClient) = receiveNewConnection(socket,privateKey)
-            x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey,account,PuliKeyClient))
+            (conn,addr,account,PublicKeyClient) = receiveNewConnection(socket,privateKey)
+            x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey,account,PublicKeyClient))
             threads.append(x)
             x.start()
             x.join()
@@ -72,8 +72,8 @@ def main(argv:list[str]):
         sys.exit()
 
 
-def new_threaded_client(conn,lock,privateKey,account,PuliKeyClient):
-    message,derived_key = receiveMessage(conn,PuliKeyClient,privateKey)
+def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
+    message,derived_key = receiveMessage(conn,PublicKeyClient,privateKey)
     Signedmessage = pickle.loads(message)
     if "message" and "signature" in Signedmessage:
         message = json.loads(Signedmessage["message"].decode())

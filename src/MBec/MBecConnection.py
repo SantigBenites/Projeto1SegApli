@@ -15,23 +15,41 @@ from Cripto import *
 
 current_working_directory = os.getcwd()
 
-def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBank):
+def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBank, account:str,publicKey):
+    
+    pem = publicKey.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
     
     #encriptação com chave publica
-    #ENC_PK_BANK{account,chavepublica}
-    
-    nouce = secrets.token_bytes(100)
+    messageToEncript = pickle.dumps({"account": account})
+    messageEnc = encryptDataWithPublicKey(publicKeyBank,messageToEncript)
+
+    messageWithPublicKey = pickle.dumps({messageEnc,pem})
     
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Start Connection
         s.connect((destIP, destPort))
-        s.sendall(nouce)
-        nounceSigned = s.recv(1024)
         
+        #sends account number
+        s.sendall(messageWithPublicKey)
+        
+        #Authentication of MBEC
+        nonceReceived = s.recv(1024) 
+        s.sendall(signwithPrivateKey(privateKey,nonceReceived))
+        if(s.recv(1024).decode()!="OK"):
+            s.close()
+            return
+        
+        #Authenticates Bank
+        nonce = secrets.token_bytes(100)
+        s.sendall(nonce)
+        nounceSigned = s.recv(1024)
         #verify signature from server
-        if verifySignature(publicKeyBank,nounceSigned,nouce):
-
+        if verifySignature(publicKeyBank,nounceSigned,nonce):
+            s.sendall("OK".encode())
             #Get EECDF shared secret
             derived_key = ephemeralEllipticCurveDiffieHellmanSending(s)
             
@@ -58,6 +76,10 @@ def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBan
             cipher = AES.new(derived_key, AES.MODE_CFB,iv)
             plaintext = cipher.decrypt(ciphertext)
             return plaintext
+        else:
+            print("NOK")
+            s.sendall("NOK".encode())
+            s.close()
     
     
 def sendMessageToStore(destIP:str, destPort:int, message: str):

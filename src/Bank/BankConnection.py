@@ -1,3 +1,4 @@
+import secrets
 import socket,base64
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
@@ -8,6 +9,7 @@ from cryptography.hazmat.primitives import hashes
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad, pad
 from Cripto import *
+from BankStorage import *
 #from utils import pad,unpad
 
 # Generate an ephemeral elliptic curve key pair
@@ -31,32 +33,47 @@ def createSocket(host="127.0.0.1",port=3000):
 
 def receiveNewConnection(socket:socket.socket,privateKey):
 
+
     socket.listen()
     
     conn, addr = socket.accept()
     
     #recebe {account,chavepublica}
-    #acede a store verifica account
-    #getCHavePublica
-    #nao guarda chave Publica
+    received = conn.recv(5000)
+    (receivedmsg,publicKeyBytes) = pickle.loads(received)
+    decripted = decryptWithPrivateKey(privateKey,receivedmsg)
+    accountNumber = pickle.loads(decripted)
     
+    store = BankStorageSingleton()
     
-#authenticação
+    publicKeyUser = store.getPublicKeyUser(accountNumber["account"])
+    
+    if publicKeyUser == None :
+        publicKeyUser = serialization.load_pem_public_key(publicKeyBytes)
+        
+    #Authentication of MBEC
+    nonce = secrets.token_bytes(100)
+    conn.sendall(nonce)
+    signedNonce = conn.recv(1024)
+    if not verifySignature(publicKeyUser,signedNonce,nonce):
+        conn.sendall("NOK".encode())
+        conn.close()
+    
+    conn.sendall("OK".encode())
+
+    #Bank Authentication
     nounce = conn.recv(1024)
-    
     nounceSigned = signwithPrivateKey(privateKey,nounce)
-    
     conn.sendall(nounceSigned)
     
+    if(conn.recv(1024).decode()!="OK"):
+        conn.close()
+        return
     
-    #recebe nonce do cliente
-    #bank assina
-    #cliente 
-    #
-    return (conn,addr,account,PuliKeyClient)
+    return (conn,addr,accountNumber["account"],publicKeyUser)
 
 
-def receiveMessage(connection:socket):
+def receiveMessage(connection:socket,p,b):
 
     #Get EECDF shared secret
     derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection)

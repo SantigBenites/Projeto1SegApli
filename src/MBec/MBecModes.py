@@ -81,7 +81,7 @@ def newAccountMode(argv:list[str]):
     publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
 
     # Send receive message from Bank
-    messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage,privateKey,publicKeyBank)
+    messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage,privateKey,publicKeyBank,account,publicKey)
     
     signedMessage = pickle.loads(messageEncode)
     
@@ -168,7 +168,9 @@ def depositMode(argv:list[str]):
 
     m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
     
-    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8'),privateKey,publicKeyBank))
+    publicKey = getPublicKey(privateKey)
+    
+    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8'),privateKey,publicKeyBank,account,publicKey))
     
     if "message" and "signature" not in signedMessage:
         return 130
@@ -254,8 +256,10 @@ def createCardMode(argv:list[str]):
         "amount": amount
     }).encode('utf8')
 
+
+    publicKey = getPublicKey(privateKey)
     # Send receive message from Bank
-    messageEncode = sendMessage(ipBankAddress,bkPort,newCardMessage,privateKey,publicKeyBank)
+    messageEncode = sendMessage(ipBankAddress,bkPort,newCardMessage,privateKey,publicKeyBank,account,publicKey)
     signedMessage = pickle.loads(messageEncode)
 
     if "message" and "signature" not in signedMessage:
@@ -337,9 +341,9 @@ def getBalanceMode(argv:list[str]):
      
     m = json.dumps({"MessageType": "Balance", "account":account})
     
+    publicKey = getPublicKey(privateKey)
     
-    
-    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8'),privateKey,publicKeyBank))
+    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8'),privateKey,publicKeyBank,account,publicKey))
     
     if "message" and "signature" not in signedMessage:
         return 130
