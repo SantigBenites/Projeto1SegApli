@@ -135,10 +135,12 @@ def withdrawMode(signedMessage, message,privateKey):
     if "content" and "ShoppingValue" and "IPClient" and "portClient" not in message:
         return json.dumps({"Error":130}).encode('utf8')
     
+    fileContent = message["content"]
+    
     print(message["IPClient"])
     print(message["portClient"])
     
-    decriptedData =  decryptWithPrivateKey(privateKey, message["content"])
+    decriptedData =  decryptWithPrivateKey(privateKey, fileContent["message"])
     
     storage = BankStorageSingleton()
     

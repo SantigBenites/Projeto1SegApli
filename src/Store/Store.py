@@ -51,10 +51,9 @@ def main(argv: list[str]):
                     if "ip" and "port" and "message" and"signature" not in fileContent:
                         #erro
                         return
-                    
-                    print(len(fileContent["message"]))
+
                     #messagetoAuthenticate has to have a MessageType
-                    messageToAuthenticate = pickle.dumps({"message": pickle.dumps({"MessageType":"WithdrawCard", "content":  fileContent["message"],"ShoppingValue":withdrawCardMessage["ShoppingValue"],"IPClient":withdrawCardMessage["IPClient"], "portClient":withdrawCardMessage["portClient"]}), "signature": fileContent["signature"]})
+                    messageToAuthenticate = pickle.dumps({"message": pickle.dumps({"MessageType":"WithdrawCard", "content":  fileContent,"ShoppingValue":withdrawCardMessage["ShoppingValue"],"IPClient":withdrawCardMessage["IPClient"], "portClient":withdrawCardMessage["portClient"]}), "signature": fileContent["signature"]})
 
                     data = sendMessageToBank(fileContent["ip"],fileContent["port"],messageToAuthenticate,publicKeyBank,privateKey,publicKey)
                     
