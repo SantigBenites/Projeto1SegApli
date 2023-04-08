@@ -41,7 +41,7 @@ def main(argv: list[str]):
             
             #print(withdrawCardMessage)
             
-            if "MessageType" and "contentFile" and "ShoppingValue" in withdrawCardMessage:
+            if "MessageType" and "contentFile" and "ShoppingValue" and "IPClient" and "portClient" in withdrawCardMessage:
                 if withdrawCardMessage["MessageType"] == "WithdrawCard":
                     
                     fileContent = withdrawCardMessage["contentFile"]
@@ -54,7 +54,7 @@ def main(argv: list[str]):
                     
                     print(len(fileContent["message"]))
                     #messagetoAuthenticate has to have a MessageType
-                    messageToAuthenticate = pickle.dumps({"message": pickle.dumps({"MessageType":"WithdrawCard", "content":  fileContent["message"],"ShoppingValue":withdrawCardMessage["ShoppingValue"]}), "signature": fileContent["signature"]})
+                    messageToAuthenticate = pickle.dumps({"message": pickle.dumps({"MessageType":"WithdrawCard", "content":  fileContent["message"],"ShoppingValue":withdrawCardMessage["ShoppingValue"],"IPClient":withdrawCardMessage["IPClient"], "portClient":withdrawCardMessage["portClient"]}), "signature": fileContent["signature"]})
 
                     data = sendMessageToBank(fileContent["ip"],fileContent["port"],messageToAuthenticate,publicKeyBank,privateKey,publicKey)
                     

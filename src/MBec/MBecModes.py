@@ -279,16 +279,10 @@ def createCardMode(argv:list[str]):
         
         
         messageEncripedPublicKeyBank = encryptDataWithPublicKey(publicKeyBank,signedMessage["message"])
-        
-        #encriptedWithMessageType = pickle.dumps({"MessageType":"WithdrawCard", "encrypted": messageEncripedPublicKeyBank})
-        
+           
         signature = signwithPrivateKey(privateKey,messageEncripedPublicKeyBank)
         contentFile = pickle.dumps({"ip": ipBankAddress, "port": bkPort, "message":messageEncripedPublicKeyBank, "signature": signature })
-        
-        
-        print(len(messageEncripedPublicKeyBank))
-        #print(messageEncripedPublicKeyBank)
-        
+
         file = open(path,"wb")
         file.write(contentFile)
         file.close()
@@ -413,20 +407,19 @@ def withdrawMode(argv:list[str]):
         file.close()
         
 
+
+
+
+    #recebe ligação do banco
+    socket, ip, port = createSocket()
     
-    #print("pickleloads:")
-    print(len(p["message"]))
-    # Generate message
     withdrawCard = pickle.dumps({
         "MessageType": "WithdrawCard",
         "contentFile": p,
         "ShoppingValue": shoppingValue,
-        "IPClinet": "" ,
-        "portClient":
-        
+        "IPClient": ip ,
+        "portClient":port
     })
-    #recebe ligação do banco
-    socket, ip, port = createSocket()
     
     # Send receive message to Store
     messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard)

@@ -132,11 +132,11 @@ def getBalanceMode(signedMessage, message):
 
 def withdrawMode(signedMessage, message,privateKey):
     
-    if "content" and "ShoppingValue" not in message:
+    if "content" and "ShoppingValue" and "IPClient" and "portClient" not in message:
         return json.dumps({"Error":130}).encode('utf8')
     
-    print(len(message["content"]))
-    print(message["content"])
+    print(message["IPClient"])
+    print(message["portClient"])
     
     decriptedData =  decryptWithPrivateKey(privateKey, message["content"])
     
