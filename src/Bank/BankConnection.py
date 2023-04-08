@@ -143,8 +143,11 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
 def ClientMode(ip:str,port:int,hashFile):
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
         # Start Connection
-        s.connect((ip,port))
+            s.connect((ip,port))
+        except socket.error:
+            return None
         # Do the diffie Hellman
         derived_key = ClientModeDiffieHellman(s)
                   

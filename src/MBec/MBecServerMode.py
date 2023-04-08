@@ -7,6 +7,7 @@ def createSocket(host="127.0.0.1"):
 
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.settimeout(10)
     s.bind((host, 0))
     return s, s.getsockname()[0], s.getsockname()[1]
 
