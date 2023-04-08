@@ -100,3 +100,15 @@ def getPublicKeyFromCertFile(path:str):
         )
         cert_file.close()
     return cert.public_key()
+
+
+def decryptWithPrivateKey(privatekey,cipherText):
+    
+    return privatekey.decrypt(
+            cipherText,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
