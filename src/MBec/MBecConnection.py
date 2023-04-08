@@ -250,3 +250,24 @@ def sendRollBackMessage(destIP:str, destPort:int, message, privateKey, publicKey
             
             # Send receive
             s.sendall(cipherText)
+
+
+
+def sendRollBackToStore(destIP:str, destPort:int, message: str):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        # Start Connection
+        s.connect((destIP, destPort))
+        
+        #Get EECDF shared secret
+        derived_key = ephemeralEllipticCurveDiffieHellmanStoreSending(s)
+        
+        #Hash Message
+        hasedMessage = hashMessage(message)
+        
+        #Setup encryption and unpadding
+        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        cipherText = iv + cipher.encrypt(hasedMessage)
+        
+        # Send receive
+        s.sendall(cipherText)

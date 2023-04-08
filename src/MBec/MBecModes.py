@@ -85,6 +85,18 @@ def newAccountMode(argv:list[str]):
     
     
     if not verifyHash(hashedMessage):
+    #if True:
+
+        rollBackmessage = pickle.dumps({
+            "MessageType": "RollBack",
+            "OriginalMessageType": "NewAccount",
+            "account": account,
+            "balance": balance
+        })
+        sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
+
+        return 130
+
         return 130
     
     signedMessage = pickle.loads(hashedMessage["messageHashed"])
@@ -181,6 +193,15 @@ def depositMode(argv:list[str]):
     
     
     if not verifyHash(hashedMessage):
+    #if True:
+        rollBackmessage = pickle.dumps({
+            "MessageType": "RollBack",
+            "OriginalMessageType": "Deposit",
+            "Amount": amount,
+            "account": account
+        })
+        sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
+
         return 130
     
     signedMessage = pickle.loads(hashedMessage["messageHashed"])
@@ -279,6 +300,15 @@ def createCardMode(argv:list[str]):
     
     
     if not verifyHash(hashedMessage):
+    #if True:
+        rollBackmessage = pickle.dumps({
+            "MessageType": "RollBack",
+            "OriginalMessageType": "CreateCard",
+            "account": account,
+            "amount": amount
+        })
+        sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
+
         return 130
     
     signedMessage = pickle.loads(hashedMessage["messageHashed"])
@@ -311,7 +341,7 @@ def createCardMode(argv:list[str]):
             "account": account,
             "amount": amount
         })
-        messageEncode = sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
+        sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
 
         return 130 
     
@@ -481,7 +511,16 @@ def withdrawMode(argv:list[str]):
     
     
     if not verifyHash(hashedMessage):
-        return 130    
+    #if True:
+        rollBackmessage = pickle.dumps({
+            "MessageType": "RollBack",
+            "OriginalMessageType": "WithdrawCard",
+            "contentFile": p,
+            "ShoppingValue": shoppingValue,
+        })
+        sendRollBackToStore(ipStoreAddress,stPort,rollBackmessage)
+
+        return 130 
     
     #Ok
     returnMessage = json.loads(hashedMessage["messageHashed"])

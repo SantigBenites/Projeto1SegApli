@@ -18,6 +18,14 @@ class BankStorageSingleton(object):
         else:
             return
         
+    def removeAccount(self,account:str,PublicKey):
+        storage = BankStorageSingleton()
+        if account in storage.users.keys():
+            storage.users.pop(account)
+        else:
+            return
+    
+        
     def getHashPathUser(self, account):
         return
         
@@ -41,11 +49,26 @@ class BankStorageSingleton(object):
         else:
             storage.balances[account] = balance
 
+    def removeAccountBalance(self,account:str,balance:int):
+        storage = BankStorageSingleton()
+        if account in storage.balances.keys():
+            storage.balances[account] -= balance
+        else:
+            return
+
     def getCreditCardBalance(self,account:str,creditCardPath:str):
         storage = BankStorageSingleton()
         if account in storage.cards.keys():
             for (cpath, b , isActive) in storage.cards[account]:
                 if(cpath  == creditCardPath and isActive == True):
+                    return b
+        return None
+    
+    def getUsedCreditCardBalance(self,account:str,creditCardPath:str):
+        storage = BankStorageSingleton()
+        if account in storage.cards.keys():
+            for (cpath, b , isActive) in storage.cards[account]:
+                if(cpath  == creditCardPath and isActive == False):
                     return b
         return None
 
@@ -73,6 +96,9 @@ class BankStorageSingleton(object):
         storage = BankStorageSingleton()
         storage.cards[account] = [(creditCardPath,balance,False) if item[0] == creditCardPath else item for item in storage.cards[account]]
 
+    def reactivateCreditCardAndUpdateBalance(self,account:str,creditCardPath:str,balance:int):
+        storage = BankStorageSingleton()
+        storage.cards[account] = [(creditCardPath,balance,True) if item[0] == creditCardPath else item for item in storage.cards[account]]
 
     def isActiveCard(self, account: str,cardPath:str):
         storage = BankStorageSingleton()

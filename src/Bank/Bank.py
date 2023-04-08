@@ -109,7 +109,7 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
         error_response(privateKey, conn, derived_key)
         return
     
-    print(message)
+    #print(message)
 
     if "account" in message:
         if message["account"] != account:
@@ -138,13 +138,26 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
                     hashedMessage = hashMessage(responseSigned)
                     sendMessage(conn,hashedMessage,derived_key)
                 case "RollBack":
-                    RollBackEntry(Signedmessage,message)
+                    if "OriginalMessageType" in message:
+                        match message["OriginalMessageType"]:
+                            case "NewAccount":
+                                response = rollBackNewAccountMode(Signedmessage,message,PublicKeyClient)
+                            case "Deposit":
+                                response = rollBackDepositMode(Signedmessage,message)
+                            case "CreateCard":
+                                response = rollBackCreateCardMode(Signedmessage,message)
+                            case "Balance":
+                                response = rollBackGetBalanceMode(Signedmessage,message)
                     return
     elif message["MessageType"] == "WithdrawCard":
         response = withdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
         responseSigned = signedMessage(response,privateKey)
         hashedMessage = hashMessage(responseSigned)
         sendMessage(conn,hashedMessage,derived_key)
+    elif message["MessageType"] == "RollBack" and message["OriginalMessageType"] == "WithdrawCard":
+        response = rollBackWithdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
+        print(response)
+        return 
     else:
         error_response(privateKey,conn,derived_key)
         return

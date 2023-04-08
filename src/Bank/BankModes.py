@@ -53,8 +53,8 @@ def depositMode(signedMessage, message):
 
     # Verify message parameters are valid
     if  not (
-        argsAreValidAccountNames(account) and
-        argsAreValidBalances(deposit)):
+        argsAreValidAccountNames(str(account)) and
+        argsAreValidBalances(str(deposit))):
             
             return json.dumps({"Error":130}).encode('utf8')
     

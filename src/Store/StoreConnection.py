@@ -198,3 +198,60 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection):
     connection.sendall(public_key)
 
     return derived_key
+
+
+
+def sendRollBackToBank(destIP:str, destPort:int, message: str,publicKeyBank,privateKey,publicKey):
+    
+
+        
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        
+        # Start Connection
+        s.connect((destIP, destPort))
+        
+        pem = publicKey.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        #encriptação com chave publica
+        messageToEncript = pickle.dumps({"account": ""})
+        messageEnc = encryptDataWithPublicKey(publicKeyBank,messageToEncript)
+    
+        messageWithPublicKey = pickle.dumps({"msg":messageEnc,"pem":pem})
+        
+        hashedMessage = hashMessage(messageWithPublicKey)
+        
+        #sends account number
+        s.sendall(hashedMessage)
+        
+        #Authentication of MBEC
+        nonceReceived = s.recv(1024) 
+        s.sendall(signwithPrivateKey(privateKey,nonceReceived))
+        if(s.recv(1024).decode()!="OK"):
+            s.close()
+            return
+
+        #Authenticates Bank
+        nonce = secrets.token_bytes(100)
+        s.sendall(nonce)
+        nounceSigned = s.recv(1024)
+        
+        #verify signature from server
+        if verifySignature(publicKeyBank,nounceSigned,nonce):
+            s.sendall("OK".encode())
+            #Get EECDF shared secret
+            derived_key = ephemeralEllipticCurveDiffieHellmanSending(s,privateKey,publicKeyBank)
+
+            #Setup encryption and unpadding
+            iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            
+            #hashMessage
+            hasedMessage = hashMessage(message)
+            
+            cipherText = iv + cipher.encrypt(hasedMessage)
+            
+            # Send receive
+            s.send(cipherText)

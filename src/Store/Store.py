@@ -115,9 +115,7 @@ def main(argv: list[str]):
                     
                     msg =  pickle.dumps({"message": hashedMessage["messageHashed"], "signature": signature})
                     
-                    data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
-                    
-                    return
+                    sendRollBackToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
                 
 
 
