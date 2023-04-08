@@ -177,9 +177,8 @@ def withdrawMode(signedMessage, message,privateKey):
         return json.dumps({"Error":130}).encode('utf8')
 
     # Get Hash of file
-    fileHash = hashlib.sha256(fileContent.encode()).hexdigest()
+    fileHash = hashlib.sha256(pickle.dumps(fileContent)).hexdigest()
     clientResponse = ClientMode(userIP,int(userPort),fileHash)
-    print(clientResponse)
 
     # Check if credit card as the required amount
     if amount >= shoppingValue:

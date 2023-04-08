@@ -1,4 +1,5 @@
 import socket,base64
+from Crypto.Cipher import AES
 from Cripto import *
 from MBecConnection import *
 
@@ -29,18 +30,25 @@ def receiveNewHash(socket:socket.socket,vccFilePath:str):
 
         #Setup decryption and unpadding
         cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        receivedHash = cipher.decrypt(ciphertext)
+        receivedMessage = cipher.decrypt(ciphertext)
 
-        originalHah = hashFile(vccFilePath)
+        receivedHash = pickle.loads(receivedMessage)["hashFile"]
 
-        #if receivedHash == originalHah:
-        if True:
-            conn.close()
+        with open(vccFilePath, "rb") as file:
+            p = pickle.load(file)
+            file.close()
+        originalHah =  hashlib.sha256(pickle.dumps(p)).hexdigest()
+
+        if receivedHash == originalHah:
+            
             # Send ok to bank
             #Setup decryption and unpadding
             iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
             cipher = AES.new(key=derived_key, mode=AES.MODE_CFB, iv=iv)
-            cipherText = iv + cipher.encrypt("OK")
+            cipherText = iv + cipher.encrypt("OK".encode("utf-8"))
+            conn.sendall(cipherText)
+            conn.close()
+
             return 
         
         conn.close()

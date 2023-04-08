@@ -11,6 +11,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
 from Cripto import *
+from MBecServerMode import receiveNewHash
 #from utils import pad,unpad
 
 current_working_directory = os.getcwd()
@@ -84,7 +85,7 @@ def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, ac
             s.close()
     
     
-def sendMessageToStore(destIP:str, destPort:int, message: str):
+def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket,filePath):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Start Connection
         s.connect((destIP, destPort))
@@ -99,6 +100,10 @@ def sendMessageToStore(destIP:str, destPort:int, message: str):
         
         # Send receive
         s.sendall(cipherText)
+
+        #autenticação mutua
+        receiveNewHash(BankSocket,filePath)
+
         data = s.recv(5000)
 
         #Setup decryption and unpadding

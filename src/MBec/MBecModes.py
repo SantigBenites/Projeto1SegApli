@@ -405,14 +405,9 @@ def withdrawMode(argv:list[str]):
     with open(filePath, "rb") as file:
         p = pickle.load(file)
         file.close()
-        
-
-
-
 
     #recebe ligação do banco
     socket, ip, port = createSocket()
-    
     withdrawCard = pickle.dumps({
         "MessageType": "WithdrawCard",
         "contentFile": p,
@@ -422,11 +417,7 @@ def withdrawMode(argv:list[str]):
     })
     
     # Send receive message to Store
-    messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard)
-    
-
-    #autenticação mutua
-    receiveNewHash(socket,filePath)
+    messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard,socket,filePath)
     #Ok
     returnMessage = json.loads(messageEncode.decode('utf8'))
 

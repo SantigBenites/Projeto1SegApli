@@ -151,7 +151,7 @@ def ClientMode(ip:str,port:int,hashFile):
         #Setup encryption and unpadding
         iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
         cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        cipherText = iv + cipher.encrypt(hashFile)
+        cipherText = iv + cipher.encrypt(pickle.dumps({"hashFile":hashFile}))
 
         # Send to client
         s.sendall(cipherText)
@@ -166,7 +166,7 @@ def ClientMode(ip:str,port:int,hashFile):
         cipher = AES.new(derived_key, AES.MODE_CFB,iv)
         plaintext = cipher.decrypt(ciphertext)
 
-    return plaintext
+    return plaintext.decode()
 
 
 
