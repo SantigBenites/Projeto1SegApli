@@ -4,6 +4,7 @@ import sys, socket, json, os
 from utils import *
 from Cripto import *
 from MBecConnection import *
+from MBecServerMode import *
 
 current_working_directory = os.getcwd()
 lastUsedAccount = None
@@ -419,14 +420,21 @@ def withdrawMode(argv:list[str]):
     withdrawCard = pickle.dumps({
         "MessageType": "WithdrawCard",
         "contentFile": p,
-        "ShoppingValue": shoppingValue
+        "ShoppingValue": shoppingValue,
+        "IPClinet": "" ,
+        "portClient":
+        
     })
-    
+    #recebe ligação do banco
+    socket,port = createSocket()
     
     # Send receive message to Store
     messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard)
     
 
+    #autenticação mutua
+    receiveNewHash(socket,filePath)
+    #Ok
     returnMessage = json.loads(messageEncode.decode('utf8'))
 
 

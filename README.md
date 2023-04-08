@@ -8,15 +8,14 @@ Project done with python
 
 - Setup files
 - Add more needed verifications like time part of message
-- Vcc file in user +
-- Add IP:Port of bank to Vcc file +
-- Cipher amount account of vcc file, with bank public key +
-- Read data from vcc file 
+- Authorize card usage
+- Add IP:Port of card holder
 - Client sign content of vcc file when it receives it
-- Add authentication between user and bank !!! 95 % certeza !!!
+- Add authentication between user and bank !!! 98 % certeza !!!
 - Make sure the project can be compiled from zero in a VM 
 - Hashes em algum lado
 - Implement RollBack
+- Add Bank verifications
 
 # Git commands
 
