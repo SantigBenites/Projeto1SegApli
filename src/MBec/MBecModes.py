@@ -418,7 +418,7 @@ def withdrawMode(argv:list[str]):
         "contentFile": json_obj
     })
     #recebe ligação do banco
-    socket,port = createSocket()
+    socket, ip, port = createSocket()
     
     # Send receive message to Store
     messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard)
