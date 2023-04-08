@@ -140,21 +140,18 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
     return derived_key
 
 
-def ClientMode(ip:str,port:int,fileBytes):
+def ClientMode(ip:str,port:int,hashFile):
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Start Connection
         s.connect((ip,port))
         # Do the diffie Hellman
         derived_key = ClientModeDiffieHellman(s)
-
-        # Get Hash of file
-        #fileHash = hashlib.sha256(fileBytes.encode()).hexdigest()
                   
         #Setup encryption and unpadding
         iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
         cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        cipherText = iv + cipher.encrypt("Hello")
+        cipherText = iv + cipher.encrypt(hashFile)
 
         # Send to client
         s.sendall(cipherText)

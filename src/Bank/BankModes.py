@@ -137,9 +137,6 @@ def withdrawMode(signedMessage, message,privateKey):
     
     fileContent = message["content"]
     
-    print(message["IPClient"])
-    print(message["portClient"])
-    
     decriptedData =  decryptWithPrivateKey(privateKey, fileContent["message"])
     
     storage = BankStorageSingleton()
@@ -179,7 +176,9 @@ def withdrawMode(signedMessage, message,privateKey):
     if(amount != vcc_amount):
         return json.dumps({"Error":130}).encode('utf8')
 
-    clientResponse = ClientMode(userIP,int(userPort))
+    # Get Hash of file
+    fileHash = hashlib.sha256(fileContent.encode()).hexdigest()
+    clientResponse = ClientMode(userIP,int(userPort),fileHash)
     print(clientResponse)
 
     # Check if credit card as the required amount
