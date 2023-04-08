@@ -9,9 +9,6 @@ from StoreConnection import *
 current_working_directory = os.getcwd()
 def main(argv: list[str]):
     
-    IPBANK = "127.0.0.1"
-    PORT = 3000
-
 
     stPort = int(argv[argv.index("-p") + 1]) if "-p" in argv else 5000
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
@@ -52,10 +49,14 @@ def main(argv: list[str]):
                         #erro
                         return
 
-                    #messagetoAuthenticate has to have a MessageType
-                    messageToAuthenticate = pickle.dumps({"message": pickle.dumps({"MessageType":"WithdrawCard", "content":  fileContent,"ShoppingValue":withdrawCardMessage["ShoppingValue"],"IPClient":withdrawCardMessage["IPClient"], "portClient":withdrawCardMessage["portClient"]}), "signature": fileContent["signature"]})
-
-                    data = sendMessageToBank(fileContent["ip"],fileContent["port"],messageToAuthenticate,publicKeyBank,privateKey,publicKey)
+                    
+                    #Test
+                    
+                    signature = signwithPrivateKey(privateKey, receiveMsg)
+                    
+                    msg =  pickle.dumps({"message": receiveMsg, "signature": signature})
+                    
+                    data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
                     
                     messageSigned = pickle.loads(data)
                     

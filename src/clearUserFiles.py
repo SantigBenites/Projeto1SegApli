@@ -19,3 +19,6 @@ print(f"{os.getcwd()}/src/MBec/bank.auth was re removed")
 
 os.remove(f"{os.getcwd()}/src/Store/bank.auth")
 print(f"{os.getcwd()}/src/Store/bank.auth was re removed")
+
+
+os.remove(f"{os.getcwd()}/src/Store/bank.auth")

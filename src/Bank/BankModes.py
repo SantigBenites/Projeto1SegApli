@@ -10,7 +10,7 @@ current_working_directory = os.getcwd()
 
 def newAccountMode(signedMessage, message,PublicKeyUser):
     
-    if "account" and "balance" not in message:
+    if "account" not in message or "balance" not in message:
         return json.dumps({"Error":130}).encode('utf8')
         
     #Authentication
@@ -36,7 +36,7 @@ def newAccountMode(signedMessage, message,PublicKeyUser):
 
 def depositMode(signedMessage, message):
     
-    if "account" and "Amount" not in message:
+    if "account" not in message or "Amount" not in message:
         return  json.dumps({"Error":130}).encode('utf8')
 
     storage = BankStorageSingleton()
@@ -63,7 +63,7 @@ def depositMode(signedMessage, message):
 # Example: {"account":"55555","vcc_amount":12.00, "vcc_file":"55555_2.card"}
 def createCardMode(signedMessage, message):
     
-    if "account" and "amount" not in message:
+    if "account" not in message or "amount" not in message:
         return json.dumps({"Error":130}).encode('utf8')
 
     storage = BankStorageSingleton()
@@ -109,7 +109,7 @@ def createCardMode(signedMessage, message):
 
 def getBalanceMode(signedMessage, message):
     
-    if "account"  not in message:
+    if "account" not in message:
         return json.dumps({"Error":130}).encode('utf8')
     
     account = message["account"]
@@ -130,19 +130,25 @@ def getBalanceMode(signedMessage, message):
     
 
 
-def withdrawMode(signedMessage, message,privateKey):
+def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     
-    if "content" and "ShoppingValue" and "IPClient" and "portClient" not in message:
+    #verifies signature of store
+    if not verifySignature(PublicKeyStore,signedMessage["signature"],signedMessage["message"]):
         return json.dumps({"Error":130}).encode('utf8')
     
-    fileContent = message["content"]
+    
+    
+    if "contentFile" not in message or "ShoppingValue" not in message or "IPClient" not in message or "portClient" not in message:
+        return json.dumps({"Error":130}).encode('utf8')
+    
+    fileContent = message["contentFile"]
     
     decriptedData =  decryptWithPrivateKey(privateKey, fileContent["message"])
     
     storage = BankStorageSingleton()
     
     msg = json.loads(decriptedData)
-    if "account" and "vcc_amount" and "vcc_file" not  in msg:
+    if "account" not  in msg or "vcc_amount" not  in msg or "vcc_file" not  in msg:
         return json.dumps({"Error":130}).encode('utf8')
     
     # Get message values
@@ -159,7 +165,7 @@ def withdrawMode(signedMessage, message,privateKey):
         return json.dumps({"Error":130}).encode('utf8')
     
     #verify signatures
-    if not verifySignature(PublicKeyClient,signedMessage["signature"],fileContent["message"]):
+    if not verifySignature(PublicKeyClient,fileContent["signature"],fileContent["message"]):
         return json.dumps({"Error":130}).encode('utf8')
 
 
@@ -177,7 +183,7 @@ def withdrawMode(signedMessage, message,privateKey):
         return json.dumps({"Error":130}).encode('utf8')
 
     # Get Hash of file
-    fileHash = hashlib.sha256(pickle.dumps(fileContent)).hexdigest()
+    fileHash = hashlib.sha256(pickle.dumps(message)).hexdigest()
     clientResponse = ClientMode(userIP,int(userPort),fileHash)
 
     # Check if credit card as the required amount

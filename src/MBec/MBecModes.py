@@ -80,7 +80,7 @@ def newAccountMode(argv:list[str]):
     
     signedMessage = pickle.loads(messageEncode)
     
-    if "message" and "signature" not in signedMessage:
+    if "message" not in signedMessage or  "signature" not in signedMessage:
         return 130
     
     returnMessage = json.loads(signedMessage["message"].decode('utf8'))
@@ -89,12 +89,12 @@ def newAccountMode(argv:list[str]):
         return 130
 
     # Check if Bank response is valid or Error 
-    if "account" in returnMessage and "initial_balance" in returnMessage:
-        uploadPrivateKeyToFile(privateKey,pathUserFile)
-        return returnMessage
-    else:
-        # Error from Bank
+    if "account" not in returnMessage or "initial_balance" not in returnMessage:
         return 130
+    
+    uploadPrivateKeyToFile(privateKey,pathUserFile)
+    return returnMessage
+
 
 
 
@@ -167,7 +167,7 @@ def depositMode(argv:list[str]):
     
     signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey))
     
-    if "message" and "signature" not in signedMessage:
+    if "message" not in signedMessage or "signature" not in signedMessage:
         return 130
     
     receivedMessage = json.loads(signedMessage["message"].decode('utf8'))
@@ -176,13 +176,12 @@ def depositMode(argv:list[str]):
         return 130
     
     
-    if "account" in receivedMessage and "deposit" in receivedMessage:
-        lastUsedAccount=account
-        return receivedMessage
-        
-    else:
+    if "account" not in receivedMessage or "deposit" not in  receivedMessage:
         print("Error")
         return 130
+    
+    return receivedMessage
+
 
 
 # mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -c <amount>
@@ -257,7 +256,7 @@ def createCardMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,newCardMessage,privateKey,publicKeyBank,account,publicKey)
     signedMessage = pickle.loads(messageEncode)
 
-    if "message" and "signature" not in signedMessage:
+    if "message" not in signedMessage or "signature" not in signedMessage:
         return 130
     
     returnMessage = json.loads(signedMessage["message"].decode('utf8'))
@@ -267,30 +266,27 @@ def createCardMode(argv:list[str]):
 
 
     # Check if Bank response is valid or Error 
-    if "account" and "vcc_amount" and "vcc_file" in returnMessage:
-        # Valid message
-        
-        path = f"{current_working_directory}/src/MBec/creditCard/{returnMessage['vcc_file']}"
-        
-        #send rollback to server
-        if os.path.isfile(path) and account != returnMessage["account"] and amount != returnMessage["vcc_amount"] :
-            return 130
-        
-        
-        
-        messageEncripedPublicKeyBank = encryptDataWithPublicKey(publicKeyBank,signedMessage["message"])
-           
-        signature = signwithPrivateKey(privateKey,messageEncripedPublicKeyBank)
-        contentFile = pickle.dumps({"ip": ipBankAddress, "port": bkPort, "message":messageEncripedPublicKeyBank, "signature": signature })
-
-        file = open(path,"wb")
-        file.write(contentFile)
-        file.close()
-                
-        return returnMessage
-    else:
-        # Error from Bank
+    if "account" not in returnMessage or "vcc_amount" not in returnMessage or "vcc_file" not  in returnMessage:
         return 130
+       
+        
+    path = f"{current_working_directory}/src/MBec/creditCard/{returnMessage['vcc_file']}"
+    
+    #send rollback to server
+    if os.path.isfile(path) and account != returnMessage["account"] and amount != returnMessage["vcc_amount"] :
+        return 130
+    
+    messageEncripedPublicKeyBank = encryptDataWithPublicKey(publicKeyBank,signedMessage["message"])
+        
+    signature = signwithPrivateKey(privateKey,messageEncripedPublicKeyBank)
+    contentFile = pickle.dumps({"ip": ipBankAddress, "port": bkPort, "message":messageEncripedPublicKeyBank, "signature": signature })
+
+    file = open(path,"wb")
+    file.write(contentFile)
+    file.close()
+            
+    return returnMessage
+
 
 
 # mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -g
@@ -338,16 +334,16 @@ def getBalanceMode(argv:list[str]):
     
     signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey))
     
-    if "message" and "signature" not in signedMessage:
+    if "message" not in signedMessage or "signature" not in signedMessage:
         return 130
     
     receivedMessage = json.loads(signedMessage["message"].decode('utf8'))
     
-    if "account" in receivedMessage and "balance" in receivedMessage:
-        lastUsedAccount=account
-        return receivedMessage
-    else:
+    if "account"  not in receivedMessage or "balance" not in receivedMessage:
         return 130
+    
+    return receivedMessage
+
 
 
 
@@ -417,7 +413,7 @@ def withdrawMode(argv:list[str]):
     })
     
     # Send receive message to Store
-    messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard,socket,filePath)
+    messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard,socket)
     #Ok
     returnMessage = json.loads(messageEncode.decode('utf8'))
 

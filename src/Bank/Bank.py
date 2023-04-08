@@ -72,37 +72,55 @@ def main(argv:list[str]):
             conn.close()
         sys.exit()
 
+def error_response(privateKey, conn, derived_key):
+    response  = json.dumps({"Error":130}).encode('utf8')
+    responseSigned = signedMessage(response,privateKey)
+    sendMessage(conn,responseSigned,derived_key)
+    print(response)
+    sys.stdout.flush()
+    conn.close()
+
 
 def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
     message,derived_key = receiveMessage(conn,PublicKeyClient,privateKey)
     Signedmessage = pickle.loads(message)
-    if "message" and "signature" in Signedmessage:
-        message = pickle.loads(Signedmessage["message"])
+    if "message" not in Signedmessage or "signature" not in Signedmessage:
+        error_response(privateKey, conn, derived_key)
+        return
+    message = pickle.loads(Signedmessage["message"])
+    if "MessageType" not  in message:
+        error_response(privateKey, conn, derived_key)
+        return
 
-        if "MessageType" in message:
-            if "account" in message:
-                if message["account"] == account:
-                    match message["MessageType"]:
-                        case "NewAccount":
-                            response = newAccountMode(Signedmessage,message,PublicKeyClient)
-                            responseSigned = signedMessage(response,privateKey)
-                            sendMessage(conn,responseSigned,derived_key)
-                        case "Deposit":
-                            response = depositMode(Signedmessage,message)
-                            responseSigned = signedMessage(response,privateKey)
-                            sendMessage(conn, responseSigned,derived_key)
-                        case "Balance":
-                            response = getBalanceMode(Signedmessage,message)
-                            responseSigned = signedMessage(response,privateKey)
-                            sendMessage(conn, responseSigned,derived_key)
-                        case "CreateCard":
-                            response = createCardMode(Signedmessage,message)
-                            responseSigned = signedMessage(response,privateKey)
-                            sendMessage(conn,responseSigned,derived_key)
-            if message["MessageType"] == "WithdrawCard":
-                response = withdrawMode(Signedmessage,message,privateKey)
-                responseSigned = signedMessage(response,privateKey)
-                sendMessage(conn,responseSigned,derived_key)
+    if "account" in message:
+        if message["account"] != account:
+            error_response(privateKey, conn, derived_key)
+            return
+        else:
+            match message["MessageType"]:
+                case "NewAccount":
+                    response = newAccountMode(Signedmessage,message,PublicKeyClient)
+                    responseSigned = signedMessage(response,privateKey)
+                    sendMessage(conn,responseSigned,derived_key)
+                case "Deposit":
+                    response = depositMode(Signedmessage,message)
+                    responseSigned = signedMessage(response,privateKey)
+                    sendMessage(conn, responseSigned,derived_key)
+                case "Balance":
+                    response = getBalanceMode(Signedmessage,message)
+                    responseSigned = signedMessage(response,privateKey)
+                    sendMessage(conn, responseSigned,derived_key)
+                case "CreateCard":
+                    response = createCardMode(Signedmessage,message)
+                    responseSigned = signedMessage(response,privateKey)
+                    sendMessage(conn,responseSigned,derived_key)
+    elif message["MessageType"] == "WithdrawCard":
+        response = withdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
+        responseSigned = signedMessage(response,privateKey)
+        sendMessage(conn,responseSigned,derived_key)
+    else:
+        error_response(privateKey,conn,derived_key)
+        return
 
     with lock:
         print(response)

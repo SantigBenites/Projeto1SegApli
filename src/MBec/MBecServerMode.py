@@ -10,7 +10,7 @@ def createSocket(host="127.0.0.1"):
     s.bind((host, 0))
     return s, s.getsockname()[0], s.getsockname()[1]
 
-def receiveNewHash(socket:socket.socket,vccFilePath:str):
+def receiveNewHash(socket:socket.socket,message:str):
 
 
     socket.listen()
@@ -34,10 +34,7 @@ def receiveNewHash(socket:socket.socket,vccFilePath:str):
 
         receivedHash = pickle.loads(receivedMessage)["hashFile"]
 
-        with open(vccFilePath, "rb") as file:
-            p = pickle.load(file)
-            file.close()
-        originalHah =  hashlib.sha256(pickle.dumps(p)).hexdigest()
+        originalHah =  hashlib.sha256(message).hexdigest()
 
         if receivedHash == originalHah:
             

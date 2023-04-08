@@ -85,7 +85,7 @@ def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, ac
             s.close()
     
     
-def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket,filePath):
+def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Start Connection
         s.connect((destIP, destPort))
@@ -102,7 +102,7 @@ def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket,filePat
         s.sendall(cipherText)
 
         #autenticação mutua
-        receiveNewHash(BankSocket,filePath)
+        receiveNewHash(BankSocket,message)
 
         data = s.recv(5000)
 
