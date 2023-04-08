@@ -162,7 +162,7 @@ def withdrawMode(signedMessage, message,privateKey):
         return json.dumps({"Error":130}).encode('utf8')
     
     #verify signatures
-    if not verifySignature(PublicKeyClient,signedMessage["signature"],message["content"]):
+    if not verifySignature(PublicKeyClient,signedMessage["signature"],fileContent["message"]):
         return json.dumps({"Error":130}).encode('utf8')
 
 
