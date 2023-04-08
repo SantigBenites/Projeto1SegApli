@@ -127,8 +127,21 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
     signedPublicKey = signwithPrivateKey(privateKey,public_key)
 
     # Receive the client's public key signed with PEIVATE Key that match priviously send PublickeY
-    receivedMessage = pickle.loads(connection.recv(5000))
-    signed_client_public_key_bytes,client_public_key_bytes = receivedMessage["signedPublicKey"], receivedMessage["public_key"]
+    hasedMessage = pickle.loads(connection.recv(5000))
+    
+    #Verify Hash
+    if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        return None
+    
+    if not verifyHash(hasedMessage):
+        return None
+    
+    signMessage = pickle.loads(hasedMessage["messageHashed"])
+    
+    if "signedPublicKey" not in signMessage or  "public_key" not in signMessage:
+        return None
+    
+    signed_client_public_key_bytes,client_public_key_bytes = signMessage["signedPublicKey"], signMessage["public_key"]
     client_public_key = serialization.load_pem_public_key(client_public_key_bytes)
     
     # Verify signature of signed_client_public_key and client_public_key with server private_key 
@@ -145,9 +158,11 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
         #salt=None,
         otherinfo=None
     ).derive(shared_secret)
+    
+    signMsg = pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key})
 
     # Send the server's public key and signed public key to the client
-    connection.sendall(pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key}))
+    connection.sendall(hashMessage(signMsg))
 
     return derived_key
 
@@ -193,12 +208,19 @@ def ClientModeDiffieHellman(s:socket):
     public_key = private_key.public_key().public_bytes(
     encoding=serialization.Encoding.PEM,
     format=serialization.PublicFormat.SubjectPublicKeyInfo)
-    s.sendall(public_key)
+    hashed = hashMessage(public_key)
+    s.sendall(hashed)
 
     # Receive the server's public key
-    server_public_key_bytes = s.recv(1024)
+    msgHash= s.recv(1024)
+    hasedMessage = pickle.loads(msgHash)
+    if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        return None
+    
+    if not verifyHash(hasedMessage):
+        return None
     server_public_key = serialization.load_pem_public_key(
-    server_public_key_bytes,
+    hasedMessage["messageHashed"]
     #backend=default_backend()
     )
 

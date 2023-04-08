@@ -142,11 +142,26 @@ def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBan
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
     signedPublicKey = signwithPrivateKey(privateKey,public_key)
-    s.sendall(pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key}))
+    signedMsg = pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key})
+    
+    s.sendall(hashMessage(signedMsg))
     
     # Receive the server's public key
-    receivedMessage = pickle.loads(s.recv(1024))
-    signed_server_public_key_bytes,server_public_key_bytes = receivedMessage["signedPublicKey"], receivedMessage["public_key"]
+    hasedMessage = pickle.loads(s.recv(1024))
+    
+    if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        return None
+    
+    if not verifyHash(hasedMessage):
+        return None
+    
+    signMessage = pickle.loads(hasedMessage["messageHashed"])
+    
+    if "signedPublicKey" not in signMessage or  "public_key" not in signMessage:
+        return None
+    
+    
+    signed_server_public_key_bytes,server_public_key_bytes = signMessage["signedPublicKey"], signMessage["public_key"]
     server_public_key = serialization.load_pem_public_key(server_public_key_bytes)
     
     # Verify signature of signed_server_public_key_bytes and server_public_key_bytes with client private_key
@@ -177,9 +192,15 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection):
     )
 
     # Receive the client's public key
-    client_public_key_bytes = connection.recv(1024)
+    msgHash= connection.recv(1024)
+    hasedMessage = pickle.loads(msgHash)
+    if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        return None
+    
+    if not verifyHash(hasedMessage):
+        return None
     client_public_key = serialization.load_pem_public_key(
-        client_public_key_bytes,
+        hasedMessage["messageHashed"],
         #backend=default_backend()
     )
 
@@ -195,6 +216,6 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection):
     ).derive(shared_secret)
 
     # Send the server's public key to the client
-    connection.sendall(public_key)
+    connection.sendall(hashMessage(public_key))
 
     return derived_key

@@ -61,9 +61,16 @@ def ServerModeDiffieHellman(connection):
     )
 
     # Receive the client's public key
-    client_public_key_bytes = connection.recv(1024)
+    msgHash= connection.recv(1024)
+    hasedMessage = pickle.loads(msgHash)
+    if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        return None
+    
+    if not verifyHash(hasedMessage):
+        return None
+    
     client_public_key = serialization.load_pem_public_key(
-        client_public_key_bytes,
+        hasedMessage["messageHashed"]
         #backend=default_backend()
     )
 
@@ -79,6 +86,6 @@ def ServerModeDiffieHellman(connection):
     ).derive(shared_secret)
 
     # Send the server's public key to the client
-    connection.sendall(public_key)
+    connection.sendall(hashMessage(public_key))
 
     return derived_key

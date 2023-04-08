@@ -13,7 +13,8 @@ Project done with python
 - Implement RollBack
 - find file in -m -v
 - Adicionar hash in keys exchanged in DH
-- Adicionar
+- Adicionar cenas in bank in case of error
+- ver NOK messages
 
 # Git commands
 

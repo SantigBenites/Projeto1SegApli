@@ -136,13 +136,29 @@ def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBan
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
     signedPublicKey = signwithPrivateKey(privateKey,public_key)
-    s.sendall(pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key}))
+    
+    signMsg = pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key})
+
+    s.sendall(hashMessage(signMsg))
     
     # Receive the server's public key
-    receivedMessage = pickle.loads(s.recv(1024))
-    signed_server_public_key_bytes,server_public_key_bytes = receivedMessage["signedPublicKey"], receivedMessage["public_key"]
-    server_public_key = serialization.load_pem_public_key(server_public_key_bytes)
+    hasedMessage = pickle.loads(s.recv(1024))
     
+    #Verify Hash
+    if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        return None
+    
+    if not verifyHash(hasedMessage):
+        return None
+    
+    signMessage = pickle.loads(hasedMessage["messageHashed"])
+    
+    if "signedPublicKey" not in signMessage or  "public_key" not in signMessage:
+        return None
+    
+    signed_server_public_key_bytes,server_public_key_bytes = signMessage["signedPublicKey"], signMessage["public_key"]
+    server_public_key = serialization.load_pem_public_key(server_public_key_bytes)
+
     # Verify signature of signed_server_public_key_bytes and server_public_key_bytes with client private_key
     if not verifySignature(publicKeyBank,signed_server_public_key_bytes,server_public_key_bytes):
         return None
@@ -170,12 +186,18 @@ def ephemeralEllipticCurveDiffieHellmanStoreSending(s:socket):
     public_key = private_key.public_key().public_bytes(
     encoding=serialization.Encoding.PEM,
     format=serialization.PublicFormat.SubjectPublicKeyInfo)
-    s.sendall(public_key)
+    s.sendall(hashMessage(public_key))
 
     # Receive the server's public key
-    server_public_key_bytes = s.recv(1024)
+    msgHash= s.recv(1024)
+    hasedMessage = pickle.loads(msgHash)
+    if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        return None
+    
+    if not verifyHash(hasedMessage):
+        return None
     server_public_key = serialization.load_pem_public_key(
-    server_public_key_bytes,
+    hasedMessage["messageHashed"],
     #backend=default_backend()
     )
 
