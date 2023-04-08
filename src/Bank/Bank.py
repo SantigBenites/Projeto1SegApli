@@ -6,6 +6,7 @@ from BankModes import *
 from BankStorage import *
 from utils import *
 from Cripto import *
+from RollBack import *
 #from _thread import *
 
 loopBool = True
@@ -55,7 +56,7 @@ def main(argv:list[str]):
             
     except KeyboardInterrupt:
         # Ending properly
-        
+
         # Printing current storage
         print("Ended Properly")
         print(f"Storage: \n {storage.users}")
@@ -70,6 +71,10 @@ def main(argv:list[str]):
         # 
         if 'conn' in locals():
             conn.close()
+
+        # Close socket
+        socket.close()
+
         sys.exit()
 
 def error_response(privateKey, conn, derived_key):
@@ -91,6 +96,8 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
     if "MessageType" not  in message:
         error_response(privateKey, conn, derived_key)
         return
+    
+    print(message)
 
     if "account" in message:
         if message["account"] != account:
@@ -114,6 +121,9 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
                     response = createCardMode(Signedmessage,message)
                     responseSigned = signedMessage(response,privateKey)
                     sendMessage(conn,responseSigned,derived_key)
+                case "RollBack":
+                    RollBackEntry(Signedmessage,message)
+                    return
     elif message["MessageType"] == "WithdrawCard":
         response = withdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
         responseSigned = signedMessage(response,privateKey)

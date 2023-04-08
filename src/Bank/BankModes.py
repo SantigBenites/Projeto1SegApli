@@ -1,10 +1,11 @@
-import os, random, json, re
+import os, random, json, re, time
 import pickle
 import secrets
 import socket
 from BankStorage import *
 from Cripto import *
 from Authentication import *
+from utils import *
 
 current_working_directory = os.getcwd()
 
@@ -15,12 +16,19 @@ def newAccountMode(signedMessage, message,PublicKeyUser):
         
     #Authentication
     if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
-         return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
 
-
+    # Start Storage Singleton
     storage = BankStorageSingleton()
     accountName = message["account"]
     balance = message["balance"]
+
+    # Verify message parameters are valid
+    if  not (
+            argsAreValidAccountNames(str(accountName)) and
+            argsAreValidBalances(str(balance))):
+                
+                return json.dumps({"Error":130}).encode('utf8')
 
     # Generating response
     newAccountResponse = json.dumps({
@@ -42,6 +50,13 @@ def depositMode(signedMessage, message):
     storage = BankStorageSingleton()
     account = message["account"]
     deposit = message["Amount"]
+
+    # Verify message parameters are valid
+    if  not (
+        argsAreValidAccountNames(account) and
+        argsAreValidBalances(deposit)):
+            
+            return json.dumps({"Error":130}).encode('utf8')
     
     PublicKeyUser = storage.getPublicKeyUser(account)
     
@@ -69,6 +84,13 @@ def createCardMode(signedMessage, message):
     storage = BankStorageSingleton()
     accountName = message["account"]
     amount = message["amount"]
+
+    # Verify message parameters are valid
+    if  not (
+        argsAreValidAccountNames(str(accountName)) and
+        argsAreValidBalances(str(amount))):
+            
+            return json.dumps({"Error":130}).encode('utf8')
     
     PublickeyUser = storage.getPublicKeyUser(accountName)
     
@@ -113,6 +135,12 @@ def getBalanceMode(signedMessage, message):
         return json.dumps({"Error":130}).encode('utf8')
     
     account = message["account"]
+
+    # Verify message parameters are valid
+    if  not (
+        argsAreValidAccountNames(str(account))):
+            
+            return json.dumps({"Error":130}).encode('utf8')
     
     storage = BankStorageSingleton()
     
@@ -158,6 +186,22 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     shoppingValue = message["ShoppingValue"]
     userIP = message["IPClient"]
     userPort = message["portClient"]
+
+    # All Validation for all inputs
+    # Validate port is int
+    if safe_execute("error",TypeError,int,userPort) != "error":
+        userPort = int(userPort)
+    else:
+        return 130
+    # Validate with regex
+    if  not (
+        argsAreValidAccountNames(str(account)) and
+        argsAreValidIPv4(str(userIP)) and
+        argsAreValidPort(userPort) and 
+        argsAreValidBalances(str(vcc_amount)) and 
+        argsAreValidFileNames(str(vcc_file)) and 
+        argsAreValidBalances(str(shoppingValue))):
+            return 130
     
     PublicKeyClient = storage.getPublicKeyUser(account)
     
@@ -185,6 +229,8 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     # Get Hash of file
     fileHash = hashlib.sha256(pickle.dumps(message)).hexdigest()
     clientResponse = ClientMode(userIP,int(userPort),fileHash)
+
+    # Check if the client socket timed out
     if clientResponse == None:
         return json.dumps({"Error":130}).encode('utf8') 
 

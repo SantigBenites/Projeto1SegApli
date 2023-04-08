@@ -12,7 +12,6 @@ Project done with python
 - Make sure the project can be compiled from zero in a VM 
 - Hashes em algum lado
 - Implement RollBack
-- Add Bank verifications
 
 # Git commands
 
