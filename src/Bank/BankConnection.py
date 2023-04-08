@@ -1,5 +1,5 @@
 import secrets
-import socket,base64
+import socket,base64, hashlib
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
@@ -138,6 +138,40 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
     connection.sendall(pickle.dumps({"signedPublicKey":signedPublicKey,"public_key":public_key}))
 
     return derived_key
+
+
+def ClientMode(ip:str,port:int,fileBytes):
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        # Start Connection
+        s.connect((ip,port))
+        # Do the diffie Hellman
+        derived_key = ClientModeDiffieHellman(s)
+
+        # Get Hash of file
+        #fileHash = hashlib.sha256(fileBytes.encode()).hexdigest()
+                  
+        #Setup encryption and unpadding
+        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        cipherText = iv + cipher.encrypt("Hello")
+
+        # Send to client
+        s.sendall(cipherText)
+        data = s.recv(5000)
+
+        #Setup decryption and unpadding
+        # Separe iv and ciphertext
+        iv = data[:AES.block_size]
+        ciphertext = data[AES.block_size:]
+
+        #Setup decryption and unpadding
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        plaintext = cipher.decrypt(ciphertext)
+
+    return plaintext
+
+
 
 
 def ClientModeDiffieHellman(s:socket):

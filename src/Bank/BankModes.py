@@ -153,6 +153,8 @@ def withdrawMode(signedMessage, message,privateKey):
     vcc_amount = msg["vcc_amount"]
     vcc_file = msg["vcc_file"]
     shoppingValue = message["ShoppingValue"]
+    userIP = message["IPClient"]
+    userPort = message["portClient"]
     
     PublicKeyClient = storage.getPublicKeyUser(account)
     
@@ -177,7 +179,9 @@ def withdrawMode(signedMessage, message,privateKey):
     if(amount != vcc_amount):
         return json.dumps({"Error":130}).encode('utf8')
 
-    
+    clientResponse = ClientMode(userIP,int(userPort))
+    print(clientResponse)
+
     # Check if credit card as the required amount
     if amount >= shoppingValue:
         storage.updateCreditCardBalance(account,vcc_file, amount-shoppingValue)
