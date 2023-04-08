@@ -64,6 +64,11 @@ class BankStorageSingleton(object):
             storage.cards[account] = [(cardPath,cardValue,True)]
 
 
+    def removeCreditCard(self,account:str,cardName:str):
+        storage = BankStorageSingleton()
+        storage.cards[account] = [(cpath, b , isActive) for (cpath, b , isActive) in storage.cards[account] if cpath != cardName]
+
+
     def updateCreditCardBalance(self,account:str,creditCardPath:str,balance:int):
         storage = BankStorageSingleton()
         storage.cards[account] = [(creditCardPath,balance,False) if item[0] == creditCardPath else item for item in storage.cards[account]]

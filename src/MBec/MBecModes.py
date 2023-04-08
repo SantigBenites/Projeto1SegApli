@@ -195,7 +195,6 @@ def depositMode(argv:list[str]):
     
     
     if "account" not in receivedMessage or "deposit" not in  receivedMessage:
-        print("Error")
         return 130
     
     return receivedMessage
@@ -302,7 +301,22 @@ def createCardMode(argv:list[str]):
     path = f"{current_working_directory}/src/MBec/creditCard/{returnMessage['vcc_file']}"
     
     #send rollback to server
-    if os.path.isfile(path) and account != returnMessage["account"] and amount != returnMessage["vcc_amount"] :
+    if os.path.isfile(path):
+    #if True :
+        # Implement rollback
+        # Generate message
+        rollBackmessage = pickle.dumps({
+            "MessageType": "RollBack",
+            "OriginalMessageType": "CreateCard",
+            "account": account,
+            "amount": amount
+        })
+        messageEncode = sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
+
+        return 130 
+    
+    if account != returnMessage["account"] and amount != returnMessage["vcc_amount"] :
+
         return 130
     
     messageEncripedPublicKeyBank = encryptDataWithPublicKey(publicKeyBank,signedMessage["message"])
@@ -453,8 +467,12 @@ def withdrawMode(argv:list[str]):
         "portClient":port
     })
     
+    
     # Send receive message to Store
     messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard,socket)
+    
+    if messageEncode == 130:
+        return 130
     
     hashedMessage = pickle.loads(messageEncode)
     
