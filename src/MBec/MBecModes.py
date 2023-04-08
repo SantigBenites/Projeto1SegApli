@@ -78,7 +78,16 @@ def newAccountMode(argv:list[str]):
     # Send receive message from Bank
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage,privateKey,publicKeyBank,account,publicKey)
     
-    signedMessage = pickle.loads(messageEncode)
+    hashedMessage = pickle.loads(messageEncode)
+    
+    if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
+        return 130
+    
+    
+    if not verifyHash(hashedMessage):
+        return 130
+    
+    signedMessage = pickle.loads(hashedMessage["messageHashed"])
     
     if "message" not in signedMessage or  "signature" not in signedMessage:
         return 130
@@ -165,7 +174,16 @@ def depositMode(argv:list[str]):
     
     publicKey = getPublicKey(privateKey)
     
-    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey))
+    hashedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey))
+    
+    if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
+            return 130
+    
+    
+    if not verifyHash(hashedMessage):
+        return 130
+    
+    signedMessage = pickle.loads(hashedMessage["messageHashed"])
     
     if "message" not in signedMessage or "signature" not in signedMessage:
         return 130
@@ -254,7 +272,18 @@ def createCardMode(argv:list[str]):
     publicKey = getPublicKey(privateKey)
     # Send receive message from Bank
     messageEncode = sendMessage(ipBankAddress,bkPort,newCardMessage,privateKey,publicKeyBank,account,publicKey)
-    signedMessage = pickle.loads(messageEncode)
+    
+    hashedMessage = pickle.loads(messageEncode)
+    
+    if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
+            return 130
+    
+    
+    if not verifyHash(hashedMessage):
+        return 130
+    
+    signedMessage = pickle.loads(hashedMessage["messageHashed"])
+
 
     if "message" not in signedMessage or "signature" not in signedMessage:
         return 130
@@ -332,7 +361,19 @@ def getBalanceMode(argv:list[str]):
     
     publicKey = getPublicKey(privateKey)
     
-    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey))
+    messageEncode = sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey)
+    
+    hashedMessage = pickle.loads(messageEncode)
+    
+    if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
+            return 130
+    
+    
+    if not verifyHash(hashedMessage):
+        return 130
+    
+    signedMessage = pickle.loads(hashedMessage["messageHashed"])
+
     
     if "message" not in signedMessage or "signature" not in signedMessage:
         return 130
@@ -414,8 +455,18 @@ def withdrawMode(argv:list[str]):
     
     # Send receive message to Store
     messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard,socket)
+    
+    hashedMessage = pickle.loads(messageEncode)
+    
+    if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
+            return 130
+    
+    
+    if not verifyHash(hashedMessage):
+        return 130    
+    
     #Ok
-    returnMessage = json.loads(messageEncode.decode('utf8'))
+    returnMessage = json.loads(hashedMessage["messageHashed"])
 
 
 

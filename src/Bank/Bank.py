@@ -75,7 +75,8 @@ def main(argv:list[str]):
 def error_response(privateKey, conn, derived_key):
     response  = json.dumps({"Error":130}).encode('utf8')
     responseSigned = signedMessage(response,privateKey)
-    sendMessage(conn,responseSigned,derived_key)
+    hashedMessage = hashMessage(responseSigned)
+    sendMessage(conn,hashedMessage,derived_key)
     print(response)
     sys.stdout.flush()
     conn.close()
@@ -83,7 +84,18 @@ def error_response(privateKey, conn, derived_key):
 
 def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
     message,derived_key = receiveMessage(conn,PublicKeyClient,privateKey)
-    Signedmessage = pickle.loads(message)
+    
+    hashedMessage = pickle.loads(message)
+    
+    if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
+        error_response(privateKey, conn, derived_key)
+        return
+    
+    if not verifyHash(hashedMessage):
+        error_response(privateKey, conn, derived_key)
+        return
+    
+    Signedmessage = pickle.loads(hashedMessage["messageHashed"])
     if "message" not in Signedmessage or "signature" not in Signedmessage:
         error_response(privateKey, conn, derived_key)
         return
@@ -101,23 +113,28 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
                 case "NewAccount":
                     response = newAccountMode(Signedmessage,message,PublicKeyClient)
                     responseSigned = signedMessage(response,privateKey)
-                    sendMessage(conn,responseSigned,derived_key)
+                    hashedMessage = hashMessage(responseSigned)
+                    sendMessage(conn,hashedMessage,derived_key)
                 case "Deposit":
                     response = depositMode(Signedmessage,message)
                     responseSigned = signedMessage(response,privateKey)
-                    sendMessage(conn, responseSigned,derived_key)
+                    hashedMessage = hashMessage(responseSigned)
+                    sendMessage(conn, hashedMessage,derived_key)
                 case "Balance":
                     response = getBalanceMode(Signedmessage,message)
                     responseSigned = signedMessage(response,privateKey)
-                    sendMessage(conn, responseSigned,derived_key)
+                    hashedMessage = hashMessage(responseSigned)
+                    sendMessage(conn, hashedMessage,derived_key)
                 case "CreateCard":
                     response = createCardMode(Signedmessage,message)
                     responseSigned = signedMessage(response,privateKey)
-                    sendMessage(conn,responseSigned,derived_key)
+                    hashedMessage = hashMessage(responseSigned)
+                    sendMessage(conn,hashedMessage,derived_key)
     elif message["MessageType"] == "WithdrawCard":
         response = withdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
         responseSigned = signedMessage(response,privateKey)
-        sendMessage(conn,responseSigned,derived_key)
+        hashedMessage = hashMessage(responseSigned)
+        sendMessage(conn,hashedMessage,derived_key)
     else:
         error_response(privateKey,conn,derived_key)
         return

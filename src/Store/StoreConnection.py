@@ -51,11 +51,13 @@ def receiveMessage(connection:socket):
     return plaintext,derived_key
 
 def sendMessage(connection:socket,data,derived_key):
+    
+    hashedMessage = hashMessage(data)
 
     #Setup encryption and unpadding
     iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
     cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-    cipherText = iv + cipher.encrypt(data)
+    cipherText = iv + cipher.encrypt(hashedMessage)
 
     connection.sendall(cipherText)
     
@@ -79,8 +81,10 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank,priva
     
         messageWithPublicKey = pickle.dumps({"msg":messageEnc,"pem":pem})
         
+        hashedMessage = hashMessage(messageWithPublicKey)
+        
         #sends account number
-        s.sendall(messageWithPublicKey)
+        s.sendall(hashedMessage)
         
         #Authentication of MBEC
         nonceReceived = s.recv(1024) 
@@ -103,7 +107,11 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank,priva
             #Setup encryption and unpadding
             iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
             cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-            cipherText = iv + cipher.encrypt(message)
+            
+            #hashMessage
+            hasedMessage = hashMessage(message)
+            
+            cipherText = iv + cipher.encrypt(hasedMessage)
             
             # Send receive
             s.send(cipherText)

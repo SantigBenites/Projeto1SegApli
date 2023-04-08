@@ -16,6 +16,8 @@ Project done with python
 - Hashes em algum lado
 - Implement RollBack
 - Add Bank verifications
+- find file in -m -v
+- Adicionar hash in keys exchanged in DH
 
 # Git commands
 

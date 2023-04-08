@@ -5,6 +5,16 @@ import cryptography
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography import x509
 
+
+def hashMessage (message):
+    hashMsg  = hashlib.sha256(message).hexdigest()
+    return pickle.dumps({"messageHashed":message,"hash": hashMsg })
+
+def verifyHash (message):
+    receivedHash = message["hash"]
+    hashObtained = hashlib.sha256(message["messageHashed"]).hexdigest()
+    return receivedHash == hashObtained
+
 def signedMessage(response,privateKey):
     signature = signwithPrivateKey(privateKey,response)
     m = pickle.dumps({"message":response,"signature":signature})

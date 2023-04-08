@@ -40,7 +40,19 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     
     #recebe {account,chavepublica}
     received = conn.recv(5000)
-    receivedmsg =  pickle.loads(received)
+    hasedMessage =  pickle.loads(received)
+    
+    if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        return
+    
+    if not verifyHash(hasedMessage):
+        return
+    
+    receivedmsg = pickle.loads(hasedMessage["messageHashed"])
+    
+    if "msg" not in receivedmsg or "pem" not in receivedmsg:
+        return
+    
     encriptedMsg = receivedmsg["msg"]
     publicKeyBytes = receivedmsg["pem"]
     decripted = decryptWithPrivateKey(privateKey,encriptedMsg)

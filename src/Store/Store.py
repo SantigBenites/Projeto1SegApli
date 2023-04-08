@@ -27,52 +27,81 @@ def main(argv: list[str]):
     
     try:
         while True:
-            #authFile verificar que exixt
             (conn, addr) = receiveNewConnection(socket)
             
             receiveMsg,derived_key = receiveMessage(conn)
-
             
-            withdrawCardMessage = pickle.loads(receiveMsg)
-            
-            
-            #print(withdrawCardMessage)
-            
-            if "MessageType" and "contentFile" and "ShoppingValue" and "IPClient" and "portClient" in withdrawCardMessage:
-                if withdrawCardMessage["MessageType"] == "WithdrawCard":
-                    
-                    fileContent = withdrawCardMessage["contentFile"]
-                    
-                    #print(fileContent)
-                    
-                    if "ip" and "port" and "message" and"signature" not in fileContent:
-                        #erro
-                        return
-
-                    
-                    #Test
-                    
-                    signature = signwithPrivateKey(privateKey, receiveMsg)
-                    
-                    msg =  pickle.dumps({"message": receiveMsg, "signature": signature})
-                    
-                    data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
-                    
-                    messageSigned = pickle.loads(data)
-                    
-                    if not verifySignature(publicKeyBank,messageSigned["signature"],messageSigned["message"]):
-                        sendMessage(conn,json.dumps({"Error": 130}.encode(),derived_key))
-                        
-                    message = json.loads(messageSigned["message"])
-                    
-                    if "vcc_file" and "vcc_amount_used" not in message:
-                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
-                    
-                    print(message)
-                    sendMessage(conn,messageSigned["message"],derived_key)
-            
-            
+            hashedMessage = pickle.loads(receiveMsg)
     
+            if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
+                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                conn.close()
+                continue
+            
+            
+            if not verifyHash(hashedMessage):
+                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                conn.close()
+                continue
+            
+
+            withdrawCardMessage = pickle.loads(hashedMessage["messageHashed"])
+
+            
+            if "MessageType" not in  withdrawCardMessage or  "contentFile" not in  withdrawCardMessage or "ShoppingValue" not in  withdrawCardMessage or "IPClient" not in  withdrawCardMessage or "portClient" not in withdrawCardMessage:
+                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                conn.close()
+                continue
+                
+            if withdrawCardMessage["MessageType"] != "WithdrawCard":
+                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                conn.close()
+                continue
+                
+            fileContent = withdrawCardMessage["contentFile"]
+
+            if "ip" not in fileContent or  "port" not in fileContent or "message" not in fileContent or "signature" not in fileContent:
+                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                conn.close()
+                continue
+
+            
+            signature = signwithPrivateKey(privateKey, hashedMessage["messageHashed"])
+            
+            msg =  pickle.dumps({"message": hashedMessage["messageHashed"], "signature": signature})
+            
+            data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
+            
+            hashedMessage = pickle.loads(data)
+            
+            if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
+                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                conn.close()
+                continue
+            
+            if not verifyHash(hashedMessage):
+                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                conn.close()
+                continue
+            
+            
+            messageSigned = pickle.loads(hashedMessage["messageHashed"])
+            
+            if not verifySignature(publicKeyBank,messageSigned["signature"],messageSigned["message"]):
+                sendMessage(conn,json.dumps({"Error": 130}.encode(),derived_key))
+                conn.close()
+                continue
+                
+            message = json.loads(messageSigned["message"])
+            
+            if "vcc_file" not in message or "vcc_amount_used" not in message:
+                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                conn.close()
+                continue
+            
+            print(message)
+            sendMessage(conn,messageSigned["message"],derived_key)
+
     
     except KeyboardInterrupt:
         sys.exit()

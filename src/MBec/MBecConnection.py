@@ -36,8 +36,10 @@ def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, ac
     
         messageWithPublicKey = pickle.dumps({"msg":messageEnc,"pem":pem})
         
+        hashedMessage = hashMessage(messageWithPublicKey)
+        
         #sends account number
-        s.sendall(messageWithPublicKey)
+        s.sendall(hashedMessage)
         
         #Authentication of MBEC
         nonceReceived = s.recv(1024) 
@@ -61,11 +63,13 @@ def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, ac
             signature = signwithPrivateKey(privateKey,message)
             
             m = pickle.dumps({"message":message,"signature":signature})
+            
+            hashedMessage = hashMessage(m)
 
             #Setup encryption and unpadding
             iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
             cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-            cipherText = iv + cipher.encrypt(m)
+            cipherText = iv + cipher.encrypt(hashedMessage)
             
             # Send receive
             s.sendall(cipherText)
@@ -93,10 +97,13 @@ def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
         #Get EECDF shared secret
         derived_key = ephemeralEllipticCurveDiffieHellmanStoreSending(s)
         
+        #Hash Message
+        hasedMessage = hashMessage(message)
+        
         #Setup encryption and unpadding
         iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
         cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        cipherText = iv + cipher.encrypt(message)
+        cipherText = iv + cipher.encrypt(hasedMessage)
         
         # Send receive
         s.sendall(cipherText)
