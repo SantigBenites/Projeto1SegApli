@@ -8,16 +8,11 @@ from Authentication import *
 
 current_working_directory = os.getcwd()
 
-def newAccountMode(signedMessage, message):
+def newAccountMode(signedMessage, message,PublicKeyUser):
     
-    if "account" and "balance" and "publicKey" not in message:
+    if "account" and "balance" not in message:
         return json.dumps({"Error":130}).encode('utf8')
         
-    
-    PublicKeyUser = serialization.load_pem_public_key(
-        message["publicKey"].encode()
-    )
-    
     #Authentication
     if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
          return json.dumps({"Error":130}).encode('utf8')
@@ -107,7 +102,7 @@ def createCardMode(signedMessage, message):
     }).encode('utf8')
 
     # Updating runtime database
-    storage.addCreditCard(accountName,cardName,amount)
+    storage.addCreditCard(accountName,f"{cardName}.card",amount)
     
     return newCardResponse
 
@@ -135,40 +130,57 @@ def getBalanceMode(signedMessage, message):
     
 
 
-def withdrawMode(signedMessage, message):
+def withdrawMode(signedMessage, message,privateKey):
     
-    if "CreditCardFile" and "ShoppingValue" not in message:
+    if "content" and "ShoppingValue" not in message:
+        return json.dumps({"Error":130}).encode('utf8')
+    
+    print(len(message["content"]))
+    print(message["content"])
+    
+    decriptedData =  decryptWithPrivateKey(privateKey, message["content"])
+    
+    storage = BankStorageSingleton()
+    
+    msg = json.loads(decriptedData)
+    if "account" and "vcc_amount" and "vcc_file" not  in msg:
+        return json.dumps({"Error":130}).encode('utf8')
+    
+    # Get message values
+    account = msg["account"] 
+    vcc_amount = msg["vcc_amount"]
+    vcc_file = msg["vcc_file"]
+    shoppingValue = message["ShoppingValue"]
+    
+    PublicKeyClient = storage.getPublicKeyUser(account)
+    
+    if PublicKeyClient == None:
+        return json.dumps({"Error":130}).encode('utf8')
+    
+    #verify signatures
+    if not verifySignature(PublicKeyClient,signedMessage["signature"],message["content"]):
         return json.dumps({"Error":130}).encode('utf8')
 
-    # Get message values
-    virtualCreditCardFile = message["CreditCardFile"]
-    shoppingValue = message["ShoppingValue"]
-    storage = BankStorageSingleton()
-
-    # Get account from credit card file
-    if os.path.isfile(f"{current_working_directory}/src/Bank/creditCards/{virtualCreditCardFile}"):
-        cardPath = f"{current_working_directory}/src/Bank/creditCards/{virtualCreditCardFile}"
-        f = open(cardPath, "r")
-        account =f.read()
-    else:
-        return json.dumps({"Error":131}).encode('utf8')
 
     if shoppingValue < 0 :
         return json.dumps({"Error":132}).encode('utf8')
-    
-    
-    bool = storage.isActiveCard(account,cardPath)
+
+    bool = storage.isActiveCard(account,vcc_file)
     
     if not bool:
         return json.dumps({"Error":133}).encode('utf8')
 
-    amount = storage.getCreditCardBalance(account,cardPath)
+    amount = storage.getCreditCardBalance(account,vcc_file)
+    
+    if(amount != vcc_amount):
+        return json.dumps({"Error":130}).encode('utf8')
+
     
     # Check if credit card as the required amount
     if amount >= shoppingValue:
-        storage.updateCreditCardBalance(account,cardPath, amount-shoppingValue)
+        storage.updateCreditCardBalance(account,vcc_file, amount-shoppingValue)
         storage.addAccountBalance(account,-shoppingValue)
-        message = json.dumps({"vcc_file": virtualCreditCardFile , "vcc_amount_used": shoppingValue})
+        message = json.dumps({"vcc_file": vcc_file , "vcc_amount_used": shoppingValue})
 
     else:
         message = json.dumps({"Error":134})

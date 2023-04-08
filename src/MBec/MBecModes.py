@@ -64,18 +64,12 @@ def newAccountMode(argv:list[str]):
     
     publicKey = getPublicKey(privateKey)
     
-    pem = publicKey.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
-    )
-    
     # Generate message
-    newAccountMessage = json.dumps({
+    newAccountMessage = pickle.dumps({
         "MessageType": "NewAccount",
         "account": account,
-        "balance": balance,
-        "publicKey" : pem.decode()
-    }).encode('utf8')
+        "balance": balance
+    })
     
     #reads public Key
     publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
@@ -166,11 +160,11 @@ def depositMode(argv:list[str]):
     
     privateKey = readPrivateKeyFromFile(filePath)
 
-    m = json.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
+    m = pickle.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
     
     publicKey = getPublicKey(privateKey)
     
-    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8'),privateKey,publicKeyBank,account,publicKey))
+    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey))
     
     if "message" and "signature" not in signedMessage:
         return 130
@@ -250,11 +244,11 @@ def createCardMode(argv:list[str]):
         return 130
     
     # Generate message
-    newCardMessage = json.dumps({
+    newCardMessage = pickle.dumps({
         "MessageType": "CreateCard",
         "account": account,
         "amount": amount
-    }).encode('utf8')
+    })
 
 
     publicKey = getPublicKey(privateKey)
@@ -285,10 +279,14 @@ def createCardMode(argv:list[str]):
         
         messageEncripedPublicKeyBank = encryptDataWithPublicKey(publicKeyBank,signedMessage["message"])
         
-        encriptedWithMessageType = pickle.dumps({"MessageType":"WithdrawCard", "encrypted": messageEncripedPublicKeyBank})
+        #encriptedWithMessageType = pickle.dumps({"MessageType":"WithdrawCard", "encrypted": messageEncripedPublicKeyBank})
         
-        signature = signwithPrivateKey(privateKey,encriptedWithMessageType)
-        contentFile = pickle.dumps({"ip": ipBankAddress, "port": bkPort, "message":encriptedWithMessageType, "signature": signature })
+        signature = signwithPrivateKey(privateKey,messageEncripedPublicKeyBank)
+        contentFile = pickle.dumps({"ip": ipBankAddress, "port": bkPort, "message":messageEncripedPublicKeyBank, "signature": signature })
+        
+        
+        print(len(messageEncripedPublicKeyBank))
+        #print(messageEncripedPublicKeyBank)
         
         file = open(path,"wb")
         file.write(contentFile)
@@ -339,11 +337,11 @@ def getBalanceMode(argv:list[str]):
         argsAreValidFileNames(authFile)):
             return 130
      
-    m = json.dumps({"MessageType": "Balance", "account":account})
+    m = pickle.dumps({"MessageType": "Balance", "account":account})
     
     publicKey = getPublicKey(privateKey)
     
-    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m.encode('utf8'),privateKey,publicKeyBank,account,publicKey))
+    signedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey))
     
     if "message" and "signature" not in signedMessage:
         return 130
@@ -408,25 +406,29 @@ def withdrawMode(argv:list[str]):
     if not os.path.isfile(filePath):
         return 130
     
-    with open(filePath, "rb") as file:
-        json_obj = json.loads(json.dumps(pickle.load(file), default=str))
 
+    with open(filePath, "rb") as file:
+        p = pickle.load(file)
+        file.close()
+        
+
+    
+    #print("pickleloads:")
+    print(len(p["message"]))
     # Generate message
     withdrawCard = pickle.dumps({
         "MessageType": "WithdrawCard",
-        "contentFile": json_obj
+        "contentFile": p,
+        "ShoppingValue": shoppingValue
     })
     
     
     # Send receive message to Store
     messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard)
     
-    
-    #recebe ligação do banco
-    #autenticação mutua
-    #Ok
+
     returnMessage = json.loads(messageEncode.decode('utf8'))
-    
+
 
 
     return returnMessage

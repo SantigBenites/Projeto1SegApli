@@ -39,3 +39,23 @@ def signwithPrivateKey(privateKey, message):
         ),
         hashes.SHA256()
     )
+    
+def getPrivateKey():
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
+    return private_key
+
+def getPublicKey(privateKey):
+    return privateKey.public_key()
+
+def encryptDataWithPublicKey(publicKey, message):
+    return publicKey.encrypt(
+        message,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )

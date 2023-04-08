@@ -15,23 +15,25 @@ from Cripto import *
 
 current_working_directory = os.getcwd()
 
-def sendMessage(destIP:str, destPort:int, message: str, privateKey, publicKeyBank, account:str,publicKey):
+def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, account:str,publicKey):
     
-    pem = publicKey.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
-    )
-    
-    #encriptação com chave publica
-    messageToEncript = pickle.dumps({"account": account})
-    messageEnc = encryptDataWithPublicKey(publicKeyBank,messageToEncript)
- 
-    messageWithPublicKey = pickle.dumps({"msg":messageEnc,"pem":pem})
     
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Start Connection
         s.connect((destIP, destPort))
+        
+        
+        pem = publicKey.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        
+        #encriptação com chave publica
+        messageToEncript = pickle.dumps({"account": account})
+        messageEnc = encryptDataWithPublicKey(publicKeyBank,messageToEncript)
+    
+        messageWithPublicKey = pickle.dumps({"msg":messageEnc,"pem":pem})
         
         #sends account number
         s.sendall(messageWithPublicKey)

@@ -59,8 +59,8 @@ def sendMessage(connection:socket,data,derived_key):
 
     connection.sendall(cipherText)
     
-def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank):
-    nouce = secrets.token_bytes(100)
+def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank,privateKey,publicKey):
+    
 
         
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -68,14 +68,37 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank):
         # Start Connection
         s.connect((destIP, destPort))
         
-        s.sendall(nouce)
+        pem = publicKey.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        #encriptação com chave publica
+        messageToEncript = pickle.dumps({"account": ""})
+        messageEnc = encryptDataWithPublicKey(publicKeyBank,messageToEncript)
+    
+        messageWithPublicKey = pickle.dumps({"msg":messageEnc,"pem":pem})
+        
+        #sends account number
+        s.sendall(messageWithPublicKey)
+        
+        #Authentication of MBEC
+        nonceReceived = s.recv(1024) 
+        s.sendall(signwithPrivateKey(privateKey,nonceReceived))
+        if(s.recv(1024).decode()!="OK"):
+            s.close()
+            return
+
+        #Authenticates Bank
+        nonce = secrets.token_bytes(100)
+        s.sendall(nonce)
         nounceSigned = s.recv(1024)
         
         #verify signature from server
-        if verifySignature(publicKeyBank,nounceSigned,nouce):
-
+        if verifySignature(publicKeyBank,nounceSigned,nonce):
+            s.sendall("OK".encode())
             #Get EECDF shared secret
-            derived_key = ephemeralEllipticCurveDiffieHellmanSending(s)
+            derived_key = ephemeralEllipticCurveDiffieHellmanSending(s,privateKey,publicKeyBank)
 
             #Setup encryption and unpadding
             iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
@@ -95,6 +118,9 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank):
             cipher = AES.new(derived_key, AES.MODE_CFB,iv)
             plaintext = cipher.decrypt(ciphertext)
             return plaintext
+        else:
+            s.sendall("NOK".encode())
+            s.close()
 
 
 def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBank):

@@ -18,43 +18,58 @@ def main(argv: list[str]):
 
     socket = createSocket(port=stPort)
     
-    pathAuthFile =f"{current_working_directory}/src/MBec/{authFile}"
+    pathAuthFile =f"{current_working_directory}/src/Store/{authFile}"
     
     if  not os.path.isfile(pathAuthFile):
         return 130
     
     publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
     
+    privateKey = getPrivateKey()
+    publicKey = getPublicKey(privateKey)
+    
     try:
         while True:
-            #authFile
+            #authFile verificar que exixt
             (conn, addr) = receiveNewConnection(socket)
             
             receiveMsg,derived_key = receiveMessage(conn)
 
             
             withdrawCardMessage = pickle.loads(receiveMsg)
-            print(withdrawCardMessage)
             
-            if "MessageType" and "contentFile" in withdrawCardMessage:
+            
+            #print(withdrawCardMessage)
+            
+            if "MessageType" and "contentFile" and "ShoppingValue" in withdrawCardMessage:
                 if withdrawCardMessage["MessageType"] == "WithdrawCard":
                     
                     fileContent = withdrawCardMessage["contentFile"]
                     
-                    print(fileContent)
+                    #print(fileContent)
                     
                     if "ip" and "port" and "message" and"signature" not in fileContent:
                         #erro
                         return
+                    
+                    print(len(fileContent["message"]))
                     #messagetoAuthenticate has to have a MessageType
-                    messageToAuthenticate = pickle.dumps({"message": json.dumps({"MessageType":"WithdrawCard", "content":  fileContent["message"]}).encode(), "signature": fileContent["signature"]})
+                    messageToAuthenticate = pickle.dumps({"message": pickle.dumps({"MessageType":"WithdrawCard", "content":  fileContent["message"],"ShoppingValue":withdrawCardMessage["ShoppingValue"]}), "signature": fileContent["signature"]})
+
+                    data = sendMessageToBank(fileContent["ip"],fileContent["port"],messageToAuthenticate,publicKeyBank,privateKey,publicKey)
                     
-                    data = sendMessageToBank(fileContent["ip"],fileContent["port"],messageToAuthenticate,publicKeyBank)
+                    messageSigned = pickle.loads(data)
                     
-                    message = json.loads(data.decode('utf8'))
+                    if not verifySignature(publicKeyBank,messageSigned["signature"],messageSigned["message"]):
+                        sendMessage(conn,json.dumps({"Error": 130}.encode(),derived_key))
+                        
+                    message = json.loads(messageSigned["message"])
+                    
+                    if "vcc_file" and "vcc_amount_used" not in message:
+                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
                     
                     print(message)
-                    sendMessage(conn,data,derived_key)
+                    sendMessage(conn,messageSigned["message"],derived_key)
             
             
     
