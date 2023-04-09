@@ -80,7 +80,8 @@ def newAccountMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage,privateKey,publicKeyBank,account,publicKey)
     
     if messageEncode == None:
-        return 130
+        print("protocol_error")
+        return 63
     
     
     hashedMessage = pickle.loads(messageEncode)
@@ -193,7 +194,8 @@ def depositMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey)
     
     if messageEncode == None:
-        return 130
+        print("protocol_error")
+        return 63
     
     hashedMessage = pickle.loads(messageEncode)
     
@@ -304,7 +306,8 @@ def createCardMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,newCardMessage,privateKey,publicKeyBank,account,publicKey)
     
     if messageEncode == None:
-        return 130
+        print("protocol_error")
+        return 63
     
     
     hashedMessage = pickle.loads(messageEncode)
@@ -423,7 +426,8 @@ def getBalanceMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey)
     
     if messageEncode == None:
-        return 130
+        print("protocol_error")
+        return 63
     
     hashedMessage = pickle.loads(messageEncode)
     
@@ -530,8 +534,9 @@ def withdrawMode(argv:list[str]):
     # Send receive message to Store
     messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard,socket)
     
-    if messageEncode == 130:
-        return 130
+    if messageEncode == 63:
+        print("protocol_error")
+        return 63
     
     hashedMessage = pickle.loads(messageEncode)
     

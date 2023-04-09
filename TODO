@@ -27,3 +27,34 @@ Store
 
 p <st-port>: The port that store should listen on. The default is 5000
 -s <auth-file>: Name of the auth file. If not supplied, defaults to bank.auth
+
+
+TIMOUTSTODO
+
+Bank
+
+Create Socket
+receiveNewConnection X
+receiveMessage X
+ephemeralEllipticCurveDiffieHellmanReceiving X
+ClientMode X
+ClientModeDiffieHellman
+
+MBec
+sendMessage X
+sendMessageToStore
+ephemeralEllipticCurveDiffieHellmanSending X
+ephemeralEllipticCurveDiffieHellmanStoreSending X
+sendRollBackMessage
+receiveNewHash X
+ServerModeDiffieHellman
+
+Store
+receiveMessage
+sendMessageToBank
+ephemeralEllipticCurveDiffieHellmanSending X
+ephemeralEllipticCurveDiffieHellmanReceiving X
+sendRollBackToBank
+
+
+sleep

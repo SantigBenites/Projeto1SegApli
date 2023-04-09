@@ -1,5 +1,5 @@
 import secrets
-import socket,base64, hashlib
+import socket,base64, hashlib,sys,time
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
@@ -31,99 +31,117 @@ def createSocket(host="127.0.0.1",port=3000):
     s.listen()
     return s
 
-def receiveNewConnection(socket:socket.socket,privateKey):
+def receiveNewConnection(s:socket.socket,privateKey):
 
 
-    socket.listen()
-    
-    conn, addr = socket.accept()
-    
-    #recebe {account,chavepublica}
-    received = conn.recv(5000)
-    hasedMessage =  pickle.loads(received)
-    
-    if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
-        conn.send("NOK".encode())
-        conn.close()
-        return None
-    
-    if not verifyHash(hasedMessage):
-        conn.send("NOK".encode())
-        conn.close()
-        return None
-    
-    receivedmsg = pickle.loads(hasedMessage["messageHashed"])
-    
-    if "msg" not in receivedmsg or "pem" not in receivedmsg:
-        conn.send("NOK".encode())
-        conn.close()
-        return None
-    
-    encriptedMsg = receivedmsg["msg"]
-    publicKeyBytes = receivedmsg["pem"]
-    decripted = decryptWithPrivateKey(privateKey,encriptedMsg)
-    accountNumber = pickle.loads(decripted)
-    
-    store = BankStorageSingleton()
-    
-    publicKeyUser = store.getPublicKeyUser(accountNumber["account"])
-    
-    if publicKeyUser == None :
-        publicKeyUser = serialization.load_pem_public_key(publicKeyBytes)
+    #s.listen()
+
+    try:
         
-    #Authentication of MBEC
-    nonce = secrets.token_bytes(100)
-    conn.sendall(nonce)
-    signedNonce = conn.recv(1024)
-    if not verifySignature(publicKeyUser,signedNonce,nonce):
-        conn.sendall("NOK".encode())
-        conn.close()
-        return None
-    
-    conn.sendall("OK".encode())
-    
+        conn, addr = s.accept()
+        
+        conn.settimeout(3)
+        #recebe {account,chavepublica}
+        received = conn.recv(5000)
+        hasedMessage =  pickle.loads(received)
+        
+        if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+            conn.send("NOK".encode())
+            conn.close()
+            return None
+        
+        if not verifyHash(hasedMessage):
+            conn.send("NOK".encode())
+            conn.close()
+            return None
+        
+        receivedmsg = pickle.loads(hasedMessage["messageHashed"])
+        
+        if "msg" not in receivedmsg or "pem" not in receivedmsg:
+            conn.send("NOK".encode())
+            conn.close()
+            return None
+        
+        encriptedMsg = receivedmsg["msg"]
+        publicKeyBytes = receivedmsg["pem"]
+        decripted = decryptWithPrivateKey(privateKey,encriptedMsg)
+        accountNumber = pickle.loads(decripted)
+        
+        store = BankStorageSingleton()
+        
+        publicKeyUser = store.getPublicKeyUser(accountNumber["account"])
+        
+        if publicKeyUser == None :
+            publicKeyUser = serialization.load_pem_public_key(publicKeyBytes)
+            
+        #Authentication of MBEC
+        nonce = secrets.token_bytes(100)
+        conn.sendall(nonce)
+        signedNonce = conn.recv(1024)
+        if not verifySignature(publicKeyUser,signedNonce,nonce):
+            conn.sendall("NOK".encode())
+            conn.close()
+            return None
+        
+        conn.sendall("OK".encode())
+        
 
-    #Bank Authentication
-    nounce = conn.recv(1024)
-    nounceSigned = signwithPrivateKey(privateKey,nounce)
-    conn.sendall(nounceSigned)
+        #Bank Authentication
+        nounce = conn.recv(1024)
+        nounceSigned = signwithPrivateKey(privateKey,nounce)
+        conn.sendall(nounceSigned)
+        
+        if(conn.recv(1024).decode()!="OK"):
+            conn.close()
+            return None
+        
+        conn.settimeout(None)
+        return (conn,addr,accountNumber["account"],publicKeyUser)
     
-    if(conn.recv(1024).decode()!="OK"):
+    except Exception:
         conn.close()
         return None
-    
-    return (conn,addr,accountNumber["account"],publicKeyUser)
 
 
 def receiveMessage(connection:socket,PublicKeyClient,privateKey):
 
-    #Get EECDF shared secret
-    derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,privateKey)
+    try:
+        connection.settimeout(3)
+        #Get EECDF shared secret
+        derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,privateKey)
 
-    if derived_key == None:
-        return None
+        if derived_key == None:
+            return None
+        
+        #time.sleep(10)
+
+        # Receive cyphertext from client
+        cipherText = connection.recv(5000)
+
+        # Separe iv and ciphertext
+        iv = cipherText[:AES.block_size]
+        ciphertext = cipherText[AES.block_size:]
+
+        #Setup decryption and unpadding
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        plaintext = cipher.decrypt(ciphertext)
+        connection.settimeout(None)
+        return plaintext,derived_key
     
-    # Receive cyphertext from client
-    cipherText = connection.recv(5000)
-
-    # Separe iv and ciphertext
-    iv = cipherText[:AES.block_size]
-    ciphertext = cipherText[AES.block_size:]
-
-    #Setup decryption and unpadding
-    cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-    plaintext = cipher.decrypt(ciphertext)
-
-    return plaintext,derived_key
+    except Exception:
+        connection.close()
+        return None
 
 def sendMessage(connection:socket,data,derived_key):
-
-    #Setup decryption and unpadding
-    iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
-    cipher = AES.new(key=derived_key, mode=AES.MODE_CFB, iv=iv)
-    cipherText = iv + cipher.encrypt(data)
-
-    connection.sendall(cipherText)
+    try:
+        #Setup decryption and unpadding
+        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+        cipher = AES.new(key=derived_key, mode=AES.MODE_CFB, iv=iv)
+        cipherText = iv + cipher.encrypt(data)
+        connection.sendall(cipherText)
+        return 1
+    except Exception:
+        return None
 
 
 def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,privateKey):
@@ -186,37 +204,42 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
 
 def ClientMode(ip:str,port:int,hashFile):
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-        # Start Connection
-            s.connect((ip,port))
-        except socket.error:
-            return None
-        # Do the diffie Hellman
-        derived_key = ClientModeDiffieHellman(s)
-        
-        if derived_key == None:
-            return None
-                  
-        #Setup encryption and unpadding
-        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
-        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        cipherText = iv + cipher.encrypt(pickle.dumps({"hashFile":hashFile}))
+    try:
 
-        # Send to client
-        s.sendall(cipherText)
-        data = s.recv(5000)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+            # Start Connection
+                s.connect((ip,port))
+            except socket.error:
+                return None
+            # Do the diffie Hellman
+            derived_key = ClientModeDiffieHellman(s)
 
-        #Setup decryption and unpadding
-        # Separe iv and ciphertext
-        iv = data[:AES.block_size]
-        ciphertext = data[AES.block_size:]
+            if derived_key == None:
+                return None
 
-        #Setup decryption and unpadding
-        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        plaintext = cipher.decrypt(ciphertext)
+            #Setup encryption and unpadding
+            iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            cipherText = iv + cipher.encrypt(pickle.dumps({"hashFile":hashFile}))
+            
+            # Send to client
+            s.sendall(cipherText)
+            data = s.recv(5000)
 
-    return plaintext.decode()
+            #Setup decryption and unpadding
+            # Separe iv and ciphertext
+            iv = data[:AES.block_size]
+            ciphertext = data[AES.block_size:]
+
+            #Setup decryption and unpadding
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            plaintext = cipher.decrypt(ciphertext)
+
+        return plaintext.decode()
+    
+    except Exception:
+        return None
 
 
 
