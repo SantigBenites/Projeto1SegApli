@@ -169,6 +169,7 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
         response = withdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
         responseSigned = signedMessage(response,privateKey)
         hashedMessage = hashMessage(responseSigned)
+        time.sleep(10)
         if sendMessage(conn,hashedMessage,derived_key) == None:
             rollBackWithdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
             print("protocol_error")

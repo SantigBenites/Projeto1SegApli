@@ -136,6 +136,7 @@ def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
 
             #autenticação mutua
             message = receiveNewHash(BankSocket,message)
+            print(message)
             Confirmation =  message == "ok"
 
             data = s.recv(5000)

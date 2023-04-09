@@ -559,6 +559,8 @@ def withdrawMode(argv:list[str]):
     #Ok
     returnMessage = json.loads(hashedMessage["messageHashed"])
 
-
+    if "Error" in returnMessage:
+        print("protocol_error")
+        return 63
 
     return returnMessage

@@ -34,7 +34,6 @@ def main(argv: list[str]):
                 conn.close()
                 continue
             receiveMsg,derived_key = result
-            time.sleep(5)
             hashedMessage = pickle.loads(receiveMsg)
     
             if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
@@ -114,10 +113,23 @@ def main(argv: list[str]):
                         continue
                     
                     print(message)
+
                     message = sendMessage(conn,messageSigned["message"],derived_key)
                     if message == None:
                         print("protocol_error")
+
+                        message = pickle.dumps({"MessageType": "RollBack",
+                                            "OriginalMessageType": "WithdrawCard",
+                                            "contentFile": withdrawCardMessage["contentFile"],
+                                            "ShoppingValue": withdrawCardMessage["ShoppingValue"]})
+                        
+                        signature = signwithPrivateKey(privateKey, message)
+                    
+                        msg =  pickle.dumps({"message": message, "signature": signature})
+                        
                         # Rollback to Bank
+                        sendRollBackToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
+                       
                         conn.close()
                         continue
                     conn.close()
