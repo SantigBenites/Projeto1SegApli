@@ -12,10 +12,7 @@ Project done with python
 
 # TODO
 
-- Setup files
 - Add more needed verifications like time part of message
-- Add authentication between user and bank !!! 98 % certeza !!!
-- Make sure the project can be compiled from zero in a VM 
 - timeouts
 - error messages
 
