@@ -23,7 +23,7 @@ def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, ac
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             # Start Connection
             s.connect((destIP, destPort))
-            s.settimeout(3)
+            s.settimeout(10)
             
             pem = publicKey.public_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -119,7 +119,7 @@ def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             # Start Connection
             s.connect((destIP, destPort))
-            s.settimeout(3)
+            s.settimeout(10)
             #Get EECDF shared secret
             derived_key = ephemeralEllipticCurveDiffieHellmanStoreSending(s)
             
@@ -286,7 +286,7 @@ def sendRollBackMessage(destIP:str, destPort:int, message, privateKey, publicKey
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             # Start Connection
             s.connect((destIP, destPort))
-            s.settimeout(3)
+            s.settimeout(10)
             
             
             pem = publicKey.public_bytes(

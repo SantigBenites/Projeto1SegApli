@@ -18,7 +18,7 @@ def receiveNewHash(s:socket.socket,message:str):
         # Accept new bank connection
         while True:
             conn, addr = s.accept()
-            conn.settimeout(3)
+            conn.settimeout(10)
 
             # Obtain derived key from diffie hellman
             derived_key = ServerModeDiffieHellman(conn)

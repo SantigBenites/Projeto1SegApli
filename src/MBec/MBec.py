@@ -8,9 +8,10 @@ def main(args):
         while True:
             argv = input()
             if len(argv) > 4096: 
-                return
+                sys.exit(130)
             argv = stringToArgs("".join(argv))
-            print(argv)
+            if argv == 130:
+                sys.exit(130)
 
             if "-n" in argv:
                 messageDict = newAccountMode(argv)
@@ -23,16 +24,16 @@ def main(args):
             elif "-m" in argv:
                 messageDict = withdrawMode(argv)
             else:
-                sys.exit(1)
+                sys.exit(130)
 
 
             if safe_execute("error",TypeError,int,messageDict) != "error":
 
-                return int(messageDict)
+                return sys.exit(int(messageDict))
 
             print(messageDict)
     except KeyboardInterrupt:
-        return 0
+        return sys.exit(0)
     
 
 
