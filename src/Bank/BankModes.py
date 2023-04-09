@@ -16,7 +16,7 @@ def newAccountMode(signedMessage, message,PublicKeyUser):
         
     #Authentication
     if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
 
     # Start Storage Singleton
     storage = BankStorageSingleton()
@@ -61,12 +61,12 @@ def depositMode(signedMessage, message):
     PublicKeyUser = storage.getPublicKeyUser(account)
     
     if(PublicKeyUser == None):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
         
     
     #Authentication
     if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
     
     storage.addAccountBalance(account,deposit)
     
@@ -95,7 +95,7 @@ def createCardMode(signedMessage, message):
     PublickeyUser = storage.getPublicKeyUser(accountName)
     
     if(PublickeyUser == None):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
 
     
     # Checking for account balance
@@ -109,7 +109,7 @@ def createCardMode(signedMessage, message):
     
 
     if not verifySignature(PublickeyUser,signedMessage["signature"],signedMessage["message"]):
-         return json.dumps({"Error":130}).encode('utf8')
+         return json.dumps({"Error":63}).encode('utf8')
     # Getting card name
     numberOfCardForAccount = storage.getCreditCardNumber(accountName) + 1
     cardName = f"{accountName}_{numberOfCardForAccount}"
@@ -147,10 +147,10 @@ def getBalanceMode(signedMessage, message):
     publicKeyUser = storage.getPublicKeyUser(account)
     
     if(publicKeyUser == None):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
         
     if not verifySignature(publicKeyUser,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
      
     response = json.dumps({"account": account, "balance": storage.getAccountBalance(account)})
         
@@ -162,7 +162,7 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     
     #verifies signature of store
     if not verifySignature(PublicKeyStore,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
     
     
     
@@ -192,7 +192,7 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     if safe_execute("error",TypeError,int,userPort) != "error":
         userPort = int(userPort)
     else:
-        return 130
+        return json.dumps({"Error":130}).encode('utf8')
     # Validate with regex
     if  not (
         argsAreValidAccountNames(str(account)) and
@@ -201,20 +201,20 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
         argsAreValidBalances(str(vcc_amount)) and 
         argsAreValidFileNames(str(vcc_file)) and 
         argsAreValidBalances(str(shoppingValue))):
-            return 130
+            return json.dumps({"Error":130}).encode('utf8')
     
     PublicKeyClient = storage.getPublicKeyUser(account)
     
     if PublicKeyClient == None:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
     
     #verify signatures
     if not verifySignature(PublicKeyClient,fileContent["signature"],fileContent["message"]):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
 
 
     if shoppingValue < 0 :
-        return json.dumps({"Error":132}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
 
     bool = storage.isActiveCard(account,vcc_file)
     
@@ -242,7 +242,7 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
         message = json.dumps({"vcc_file": vcc_file , "vcc_amount_used": shoppingValue})
 
     else:
-        message = json.dumps({"Error":134})
+        message = json.dumps({"Error":130})
         
     return message.encode('utf8')
 
