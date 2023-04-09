@@ -34,7 +34,6 @@ def main(argv: list[str]):
                 conn.close()
                 continue
             receiveMsg,derived_key = result
-            
             hashedMessage = pickle.loads(receiveMsg)
     
             if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
@@ -80,7 +79,8 @@ def main(argv: list[str]):
                     data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
                     
                     if data == None:
-                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                        print("protocol_error")
+                        sendMessage(conn,json.dumps({"Error": 63}).encode(),derived_key)
                         conn.close()
                         continue
                     
@@ -113,13 +113,25 @@ def main(argv: list[str]):
                         continue
                     
                     print(message)
-                    sendMessage(conn,messageSigned["message"],derived_key)
-                    
-                    message = pickle.dumps({"MessageType": "RollBack",
+
+                    message = sendMessage(conn,messageSigned["message"],derived_key)
+                    if message == None:
+                        print("protocol_error")
+
+                        message = pickle.dumps({"MessageType": "RollBack",
                                             "OriginalMessageType": "WithdrawCard",
-                                            "contentFile": withdrawCardMessage["fileContent"],
+                                            "contentFile": withdrawCardMessage["contentFile"],
                                             "ShoppingValue": withdrawCardMessage["ShoppingValue"]})
+                        
+                        signature = signwithPrivateKey(privateKey, message)
                     
+                        msg =  pickle.dumps({"message": message, "signature": signature})
+                        
+                        # Rollback to Bank
+                        sendRollBackToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
+                       
+                        conn.close()
+                        continue
                     conn.close()
                     
                 case "RollBack":

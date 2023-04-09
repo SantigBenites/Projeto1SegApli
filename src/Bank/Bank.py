@@ -46,12 +46,13 @@ def main(argv:list[str]):
             
             result = receiveNewConnection(socket,privateKey)
             if result == None:
-                continue
-            (conn,addr,account,PublicKeyClient) = result
-            x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey,account,PublicKeyClient))
-            threads.append(x)
-            x.start()
-            x.join()
+                print("protocol_error")
+            else:
+                (conn,addr,account,PublicKeyClient) = result
+                x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey,account,PublicKeyClient))
+                threads.append(x)
+                x.start()
+                x.join()
             
     except KeyboardInterrupt:
         # Ending properly
@@ -61,7 +62,7 @@ def main(argv:list[str]):
         print(f"Storage: \n {storage.users}")
         
         # Removing userFiles automatically, to remove in final version
-        #call(["python", "src/clearUserFiles.py"])
+        call(["python", "src/clearUserFiles.py"])
 
         # Joining threads
         for thr in threads:
@@ -90,6 +91,7 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
     result = receiveMessage(conn,PublicKeyClient,privateKey)
     if result == None:
         conn.close()
+        print("protocol_error")
         return
     
     message,derived_key = result
@@ -124,22 +126,33 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
                     response = newAccountMode(Signedmessage,message,PublicKeyClient)
                     responseSigned = signedMessage(response,privateKey)
                     hashedMessage = hashMessage(responseSigned)
-                    sendMessage(conn,hashedMessage,derived_key)
+                    if sendMessage(conn,hashedMessage,derived_key) == None:
+                        rollBackNewAccountMode(Signedmessage,message,PublicKeyClient)
+                        print("protocol_error")
+                        return
                 case "Deposit":
                     response = depositMode(Signedmessage,message)
                     responseSigned = signedMessage(response,privateKey)
                     hashedMessage = hashMessage(responseSigned)
-                    sendMessage(conn, hashedMessage,derived_key)
+                    if sendMessage(conn,hashedMessage,derived_key) == None:
+                        rollBackDepositMode(Signedmessage,message)
+                        print("protocol_error")
+                        return
                 case "Balance":
                     response = getBalanceMode(Signedmessage,message)
                     responseSigned = signedMessage(response,privateKey)
                     hashedMessage = hashMessage(responseSigned)
-                    sendMessage(conn, hashedMessage,derived_key)
+                    if sendMessage(conn,hashedMessage,derived_key) == None:
+                        print("protocol_error")
+                        return
                 case "CreateCard":
                     response = createCardMode(Signedmessage,message)
                     responseSigned = signedMessage(response,privateKey)
                     hashedMessage = hashMessage(responseSigned)
-                    sendMessage(conn,hashedMessage,derived_key)
+                    if sendMessage(conn,hashedMessage,derived_key) == None:
+                        rollBackCreateCardMode(Signedmessage,message)
+                        print("protocol_error")
+                        return
                 case "RollBack":
                     if "OriginalMessageType" in message:
                         match message["OriginalMessageType"]:
@@ -156,7 +169,10 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
         response = withdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
         responseSigned = signedMessage(response,privateKey)
         hashedMessage = hashMessage(responseSigned)
-        sendMessage(conn,hashedMessage,derived_key)
+        if sendMessage(conn,hashedMessage,derived_key) == None:
+            rollBackWithdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
+            print("protocol_error")
+            return
     elif message["MessageType"] == "RollBack" and message["OriginalMessageType"] == "WithdrawCard":
         response = rollBackWithdrawMode(Signedmessage,message,privateKey,PublicKeyClient)
         print(response)

@@ -1,5 +1,5 @@
 import secrets
-import socket
+import socket,time
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
@@ -35,35 +35,63 @@ def receiveNewConnection(socket:socket.socket):
     return (conn,addr)
 
 def receiveMessage(connection:socket):
-    #Get EECDF shared secret
-    derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection)
-    
-    if derived_key == None:
+        
+    try:
+        connection.settimeout(3)
+        #Get EECDF shared secret
+        derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection)
+        
+        if derived_key == None:
+            connection.close()
+            return None
+        
+        # Receive cyphertext from client
+        data = connection.recv(5000)
+        
+        #Setup decryption and unpadding
+        # Separe iv and ciphertext
+        iv = data[:AES.block_size]
+        ciphertext = data[AES.block_size:]
+        cipher = AES.new(key=derived_key, mode=AES.MODE_CFB,iv=iv)
+        plaintext = cipher.decrypt(ciphertext)
+
+        return plaintext,derived_key
+
+    except Exception:
         connection.close()
         return None
 
-    # Receive cyphertext from client
-    data = connection.recv(5000)
 
-    #Setup decryption and unpadding
-    # Separe iv and ciphertext
-    iv = data[:AES.block_size]
-    ciphertext = data[AES.block_size:]
-    cipher = AES.new(key=derived_key, mode=AES.MODE_CFB,iv=iv)
-    plaintext = cipher.decrypt(ciphertext)
-
-    return plaintext,derived_key
 
 def sendMessage(connection:socket,data,derived_key):
     
-    hashedMessage = hashMessage(data)
+    try:
+        connection.settimeout(3)
+        hashedMessage = hashMessage(data)
 
-    #Setup encryption and unpadding
-    iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
-    cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-    cipherText = iv + cipher.encrypt(hashedMessage)
+        #Setup encryption and unpadding
+        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        cipherText = iv + cipher.encrypt(hashedMessage)
 
-    connection.sendall(cipherText)
+        connection.sendall(cipherText)
+
+        cipherText = connection.recv(5000)
+        # Separe iv and ciphertext
+        iv = cipherText[:AES.block_size]
+        ciphertext = cipherText[AES.block_size:]
+
+        #Setup decryption and unpadding
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        plaintext = cipher.decrypt(ciphertext)
+
+        if plaintext.decode() == "ok":
+            return 1
+        else:
+            return None
+    except Exception:
+        connection.close()
+        return None
     
 def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank,privateKey,publicKey):
     try:
@@ -72,7 +100,8 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank,priva
             
             # Start Connection
             s.connect((destIP, destPort))
-            
+            s.settimeout(3)
+
             pem = publicKey.public_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
@@ -139,9 +168,22 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank,priva
             #Setup decryption and unpadding
             cipher = AES.new(derived_key, AES.MODE_CFB,iv)
             plaintext = cipher.decrypt(ciphertext)
+
+
+            #Setup encryption and unpadding
+            iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            cipherText = iv + cipher.encrypt("ok".encode())
+            
+            s.sendall(cipherText)
+
+
             return plaintext
-    except socket.error:
-                return None
+        
+    except Exception:
+        s.close()
+        return None
+   
 
 def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBank):
 

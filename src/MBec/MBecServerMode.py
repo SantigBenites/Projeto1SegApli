@@ -7,7 +7,6 @@ def createSocket(host="127.0.0.1"):
 
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.settimeout(10)
     s.bind((host, 0))
     return s, s.getsockname()[0], s.getsockname()[1]
 
@@ -19,6 +18,7 @@ def receiveNewHash(s:socket.socket,message:str):
         # Accept new bank connection
         while True:
             conn, addr = s.accept()
+            conn.settimeout(3)
 
             # Obtain derived key from diffie hellman
             derived_key = ServerModeDiffieHellman(conn)
@@ -49,8 +49,8 @@ def receiveNewHash(s:socket.socket,message:str):
                 conn.close()
 
                 return "ok"
-    except socket.timeout:
-        s.close()
+    except Exception:
+        conn.close()
         return None
 
 def ServerModeDiffieHellman(connection):
