@@ -29,8 +29,14 @@ src/MBec/test.py
 src/Bank/auth/*
 src/MBec/testCert.py
 
+# Ignore random files
+
 src/test.py
 src/MBec/bank.auth
 path.txt
 src/Store/bank.auth
 src/temp.py
+
+# Ignore enviroment
+segApli
+segApli/*

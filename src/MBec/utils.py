@@ -55,7 +55,7 @@ def argsAreValidBalances(string:str):
     validDecimal = True if re.search("^\d+\.[0-9]{0,2}$",string) else False
     validInt = False
     if validDecimal:
-        validInt = 0 < int(re.match("^\d+\.[0-9]{0,2}$",string).group(0)[:-3]) < 4294967295
+        validInt = 0 <= int(re.match("^\d+\.[0-9]{0,2}$",string).group(0)[:-3]) <= 4294967295
     return validDecimal and validInt
 
 def argsAreValidFileNames(str:str):

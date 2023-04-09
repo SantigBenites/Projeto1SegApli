@@ -7,6 +7,7 @@ from MBecConnection import *
 from MBecServerMode import *
 
 current_working_directory = os.getcwd()
+global lastUsedAccount
 lastUsedAccount = None
 
 def newAccountMode(argv:list[str]):
@@ -100,8 +101,6 @@ def newAccountMode(argv:list[str]):
         sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
 
         return 130
-
-        return 130
     
     signedMessage = pickle.loads(hashedMessage["messageHashed"])
     
@@ -117,6 +116,7 @@ def newAccountMode(argv:list[str]):
     if "account" not in returnMessage or "initial_balance" not in returnMessage:
         return 130
     
+    lastUsedAccount = account
     uploadPrivateKeyToFile(privateKey,pathUserFile)
     return returnMessage
 
@@ -227,6 +227,7 @@ def depositMode(argv:list[str]):
     if "account" not in receivedMessage or "deposit" not in  receivedMessage:
         return 130
     
+    lastUsedAccount = account
     return receivedMessage
 
 
@@ -370,7 +371,8 @@ def createCardMode(argv:list[str]):
     file = open(path,"wb")
     file.write(contentFile)
     file.close()
-            
+    
+    lastUsedAccount = account
     return returnMessage
 
 
@@ -443,6 +445,7 @@ def getBalanceMode(argv:list[str]):
     if "account"  not in receivedMessage or "balance" not in receivedMessage:
         return 130
     
+    lastUsedAccount = account
     return receivedMessage
 
 
@@ -460,8 +463,18 @@ def withdrawMode(argv:list[str]):
     if "-v" in argv:
         virtualCreditCardFile = argv[argv.index("-v")+1]
     else:
-        #find file
-        return 130
+        files = os.listdir(f"{current_working_directory}/src/MBec/creditCard")
+        if lastUsedAccount != None:
+            # We have the last used account
+            valid_withUsedAccount = [x for x in files if re.search(f"{lastUsedAccount}_\d\.card$",x)]
+            maxValue = max([int((re.search("_\d", cardNumber)[0])[1]) for cardNumber in valid_withUsedAccount])
+            virtualCreditCardFile = f"{lastUsedAccount}_{maxValue}.card"
+        else:
+            # We dont have the last used account
+            valid_withAnyAccount = [x for x in files if re.search("^.+_\d\.card$",x)]
+            maxValue = max([int((re.search("_\d", cardNumber)[0])[1]) for cardNumber in valid_withAnyAccount])
+            bestCards = [x for x in files if re.search(f"^.+_{maxValue}\.card$",x)]
+            virtualCreditCardFile = bestCards[0]
     
 
     # 
