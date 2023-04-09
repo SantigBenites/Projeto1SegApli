@@ -1,5 +1,5 @@
 import secrets
-import socket,base64, hashlib,sys,time
+import socket,base64, hashlib,sys,time,select
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
@@ -112,8 +112,6 @@ def receiveMessage(connection:socket,PublicKeyClient,privateKey):
 
         if derived_key == None:
             return None
-        
-        #time.sleep(10)
 
         # Receive cyphertext from client
         cipherText = connection.recv(5000)
@@ -133,14 +131,29 @@ def receiveMessage(connection:socket,PublicKeyClient,privateKey):
         return None
 
 def sendMessage(connection:socket,data,derived_key):
+
     try:
         #Setup decryption and unpadding
         iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
         cipher = AES.new(key=derived_key, mode=AES.MODE_CFB, iv=iv)
         cipherText = iv + cipher.encrypt(data)
         connection.sendall(cipherText)
-        return 1
+
+        cipherText = connection.recv(5000)
+        # Separe iv and ciphertext
+        iv = cipherText[:AES.block_size]
+        ciphertext = cipherText[AES.block_size:]
+
+        #Setup decryption and unpadding
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        plaintext = cipher.decrypt(ciphertext)
+
+        if plaintext.decode() == "ok":
+            return 1
+        else:
+            return None
     except Exception:
+        connection.close()
         return None
 
 

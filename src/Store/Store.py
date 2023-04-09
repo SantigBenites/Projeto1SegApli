@@ -34,7 +34,7 @@ def main(argv: list[str]):
                 conn.close()
                 continue
             receiveMsg,derived_key = result
-            
+            time.sleep(5)
             hashedMessage = pickle.loads(receiveMsg)
     
             if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
@@ -80,7 +80,8 @@ def main(argv: list[str]):
                     data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
                     
                     if data == None:
-                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                        print("protocol_error")
+                        sendMessage(conn,json.dumps({"Error": 63}).encode(),derived_key)
                         conn.close()
                         continue
                     
@@ -113,7 +114,12 @@ def main(argv: list[str]):
                         continue
                     
                     print(message)
-                    sendMessage(conn,messageSigned["message"],derived_key)
+                    message = sendMessage(conn,messageSigned["message"],derived_key)
+                    if message == None:
+                        print("protocol_error")
+                        # Rollback to Bank
+                        conn.close()
+                        continue
                     conn.close()
                     
                 case "RollBack":

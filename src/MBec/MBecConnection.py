@@ -95,6 +95,14 @@ def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, ac
             #Setup decryption and unpadding
             cipher = AES.new(derived_key, AES.MODE_CFB,iv)
             plaintext = cipher.decrypt(ciphertext)
+
+            #Setup encryption and unpadding
+            iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            cipherText = iv + cipher.encrypt("ok".encode())
+
+            s.sendall(cipherText)
+
             return plaintext
     #except (IOError, EOFError, ValueError):
     except Exception:
@@ -103,43 +111,57 @@ def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, ac
     
     
 def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        # Start Connection
-        s.connect((destIP, destPort))
-        
-        #Get EECDF shared secret
-        derived_key = ephemeralEllipticCurveDiffieHellmanStoreSending(s)
-        
-        if derived_key == None:
-            s.close()
-            return 130
-        
-        #Hash Message
-        hasedMessage = hashMessage(message)
-        
-        #Setup encryption and unpadding
-        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
-        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        cipherText = iv + cipher.encrypt(hasedMessage)
-        
-        # Send receive
-        s.sendall(cipherText)
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            # Start Connection
+            s.connect((destIP, destPort))
+            s.settimeout(3)
+            #Get EECDF shared secret
+            derived_key = ephemeralEllipticCurveDiffieHellmanStoreSending(s)
+            
+            if derived_key == None:
+                s.close()
+                return 130
+            
+            #Hash Message
+            hasedMessage = hashMessage(message)
+            
+            #Setup encryption and unpadding
+            iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            cipherText = iv + cipher.encrypt(hasedMessage)
+            
+            # Send receive
+            s.sendall(cipherText)
 
-        #autenticação mutua
-        message = receiveNewHash(BankSocket,message)
-        Confirmation =  message == "ok"
+            #autenticação mutua
+            message = receiveNewHash(BankSocket,message)
+            Confirmation =  message == "ok"
 
-        data = s.recv(5000)
+            data = s.recv(5000)
 
-        #Setup decryption and unpadding
-        # Separe iv and ciphertext
-        iv = data[:AES.block_size]
-        ciphertext = data[AES.block_size:]
+            #Setup decryption and unpadding
+            # Separe iv and ciphertext
+            iv = data[:AES.block_size]
+            ciphertext = data[AES.block_size:]
 
-        #Setup decryption and unpadding
-        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-        plaintext = cipher.decrypt(ciphertext)
-        return plaintext if Confirmation else 63
+            #Setup decryption and unpadding
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            plaintext = cipher.decrypt(ciphertext)
+
+
+            #Setup encryption and unpadding
+            iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+            cipherText = iv + cipher.encrypt("ok".encode())
+                
+            s.sendall(cipherText)
+
+            return plaintext if Confirmation else None
+        
+    except Exception:
+        s.close()
+        return None
         
 
 def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBank):
