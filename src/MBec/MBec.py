@@ -7,6 +7,8 @@ def main(args):
     try:
         while True:
             argv = input()
+            if len(argv) > 4096: 
+                return
             argv = stringToArgs("".join(argv))
             print(argv)
 
