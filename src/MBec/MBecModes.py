@@ -78,6 +78,10 @@ def newAccountMode(argv:list[str]):
     # Send receive message from Bank
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage,privateKey,publicKeyBank,account,publicKey)
     
+    if messageEncode == None:
+        return 130
+    
+    
     hashedMessage = pickle.loads(messageEncode)
     
     if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
@@ -186,7 +190,12 @@ def depositMode(argv:list[str]):
     
     publicKey = getPublicKey(privateKey)
     
-    hashedMessage = pickle.loads(sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey))
+    messageEncode = sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey)
+    
+    if messageEncode == None:
+        return 130
+    
+    hashedMessage = pickle.loads(messageEncode)
     
     if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
             return 130
@@ -292,6 +301,10 @@ def createCardMode(argv:list[str]):
     publicKey = getPublicKey(privateKey)
     # Send receive message from Bank
     messageEncode = sendMessage(ipBankAddress,bkPort,newCardMessage,privateKey,publicKeyBank,account,publicKey)
+    
+    if messageEncode == None:
+        return 130
+    
     
     hashedMessage = pickle.loads(messageEncode)
     
@@ -406,6 +419,9 @@ def getBalanceMode(argv:list[str]):
     publicKey = getPublicKey(privateKey)
     
     messageEncode = sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey)
+    
+    if messageEncode == None:
+        return 130
     
     hashedMessage = pickle.loads(messageEncode)
     

@@ -10,11 +10,8 @@ Project done with python
 - Add more needed verifications like time part of message
 - Add authentication between user and bank !!! 98 % certeza !!!
 - Make sure the project can be compiled from zero in a VM 
-- Implement RollBack
-- find file in -m -v
-- Adicionar hash in keys exchanged in DH
-- Adicionar cenas in bank in case of error
-- ver NOK messages
+- timeouts
+- error messages
 
 # Git commands
 

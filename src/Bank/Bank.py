@@ -44,11 +44,10 @@ def main(argv:list[str]):
     try:
         while loopBool:
             
-            #nao podes fazer verificação da assinatura AQUI!!!
-            #nao tem chave plica para comparar
-
-
-            (conn,addr,account,PublicKeyClient) = receiveNewConnection(socket,privateKey)
+            result = receiveNewConnection(socket,privateKey)
+            if result == None:
+                continue
+            (conn,addr,account,PublicKeyClient) = result
             x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey,account,PublicKeyClient))
             threads.append(x)
             x.start()
@@ -88,8 +87,12 @@ def error_response(privateKey, conn, derived_key):
 
 
 def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
-    message,derived_key = receiveMessage(conn,PublicKeyClient,privateKey)
+    result = receiveMessage(conn,PublicKeyClient,privateKey)
+    if result == None:
+        conn.close()
+        return
     
+    message,derived_key = result
     hashedMessage = pickle.loads(message)
     
     if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:

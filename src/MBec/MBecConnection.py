@@ -43,10 +43,15 @@ def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, ac
         
         #Authentication of MBEC
         nonceReceived = s.recv(1024) 
+        
+        if nonceReceived == "NOK".encode() :
+            s.close()
+            return None
+        
         s.sendall(signwithPrivateKey(privateKey,nonceReceived))
         if(s.recv(1024).decode()!="OK"):
             s.close()
-            return
+            return None
         
         
         #Authenticates Bank
@@ -54,39 +59,44 @@ def sendMessage(destIP:str, destPort:int, message, privateKey, publicKeyBank, ac
         s.sendall(nonce)
         nounceSigned = s.recv(1024)
         #verify signature from server
-        if verifySignature(publicKeyBank,nounceSigned,nonce):
-            s.sendall("OK".encode())
-            #Get EECDF shared secret
-            derived_key = ephemeralEllipticCurveDiffieHellmanSending(s,privateKey, publicKeyBank)
-            
-            #sign message
-            signature = signwithPrivateKey(privateKey,message)
-            
-            m = pickle.dumps({"message":message,"signature":signature})
-            
-            hashedMessage = hashMessage(m)
-
-            #Setup encryption and unpadding
-            iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
-            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-            cipherText = iv + cipher.encrypt(hashedMessage)
-            
-            # Send receive
-            s.sendall(cipherText)
-            data = s.recv(5000)
-
-            #Setup decryption and unpadding
-            # Separe iv and ciphertext
-            iv = data[:AES.block_size]
-            ciphertext = data[AES.block_size:]
-
-            #Setup decryption and unpadding
-            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-            plaintext = cipher.decrypt(ciphertext)
-            return plaintext
-        else:
+        if not verifySignature(publicKeyBank,nounceSigned,nonce):
             s.sendall("NOK".encode())
             s.close()
+            return None
+        s.sendall("OK".encode())
+        #Get EECDF shared secret
+        derived_key = ephemeralEllipticCurveDiffieHellmanSending(s,privateKey, publicKeyBank)
+        
+        if derived_key == None:
+            s.close()
+            return None
+        
+        #sign message
+        signature = signwithPrivateKey(privateKey,message)
+        
+        m = pickle.dumps({"message":message,"signature":signature})
+        
+        hashedMessage = hashMessage(m)
+
+        #Setup encryption and unpadding
+        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        cipherText = iv + cipher.encrypt(hashedMessage)
+        
+        # Send receive
+        s.sendall(cipherText)
+        data = s.recv(5000)
+
+        #Setup decryption and unpadding
+        # Separe iv and ciphertext
+        iv = data[:AES.block_size]
+        ciphertext = data[AES.block_size:]
+
+        #Setup decryption and unpadding
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        plaintext = cipher.decrypt(ciphertext)
+        return plaintext
+
     
     
 def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
@@ -96,6 +106,10 @@ def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
         
         #Get EECDF shared secret
         derived_key = ephemeralEllipticCurveDiffieHellmanStoreSending(s)
+        
+        if derived_key == None:
+            s.close()
+            return 130
         
         #Hash Message
         hasedMessage = hashMessage(message)
@@ -127,8 +141,6 @@ def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
 
 def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBank):
 
-    
-
     # Creating Elliptic Curve Public Key and sending to Server
     private_key = ec.generate_private_key(ec.SECP384R1())
     public_key = private_key.public_key().public_bytes(
@@ -142,18 +154,27 @@ def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBan
     s.sendall(hashMessage(signMsg))
     
     # Receive the server's public key
-    hasedMessage = pickle.loads(s.recv(1024))
+    enc = s.recv(1024)
+    
+    if enc == "NOK".encode():
+        return None
+    
+    
+    hasedMessage = pickle.loads(enc)
     
     #Verify Hash
     if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        s.send("NOK".encode())
         return None
     
     if not verifyHash(hasedMessage):
+        s.send("NOK".encode())
         return None
     
     signMessage = pickle.loads(hasedMessage["messageHashed"])
     
     if "signedPublicKey" not in signMessage or  "public_key" not in signMessage:
+        s.send("NOK".encode())
         return None
     
     signed_server_public_key_bytes,server_public_key_bytes = signMessage["signedPublicKey"], signMessage["public_key"]
@@ -161,8 +182,10 @@ def ephemeralEllipticCurveDiffieHellmanSending(s:socket,privateKey, publicKeyBan
 
     # Verify signature of signed_server_public_key_bytes and server_public_key_bytes with client private_key
     if not verifySignature(publicKeyBank,signed_server_public_key_bytes,server_public_key_bytes):
+        s.send("NOK".encode())
         return None
 
+    s.send("OK".encode())
     # Generate a shared secret
     shared_secret = private_key.exchange(ec.ECDH(), server_public_key)
 
@@ -190,16 +213,24 @@ def ephemeralEllipticCurveDiffieHellmanStoreSending(s:socket):
 
     # Receive the server's public key
     msgHash= s.recv(1024)
+    
+    if msgHash == "NOK".encode():
+        return None
+    
     hasedMessage = pickle.loads(msgHash)
     if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        s.send("NOK".encode())
         return None
     
     if not verifyHash(hasedMessage):
+        s.send("NOK".encode())
         return None
+    
     server_public_key = serialization.load_pem_public_key(
     hasedMessage["messageHashed"],
     #backend=default_backend()
     )
+    s.send("OK".encode())
 
     # Generate a shared secret
     shared_secret = private_key.exchange(ec.ECDH(), server_public_key)
@@ -242,10 +273,15 @@ def sendRollBackMessage(destIP:str, destPort:int, message, privateKey, publicKey
         
         #Authentication of MBEC
         nonceReceived = s.recv(1024) 
+        
+        if nonceReceived == "NOK".encode() :
+            s.close()
+            return 
+        
         s.sendall(signwithPrivateKey(privateKey,nonceReceived))
         if(s.recv(1024).decode()!="OK"):
             s.close()
-            return
+            return 
         
         
         #Authenticates Bank
@@ -253,25 +289,31 @@ def sendRollBackMessage(destIP:str, destPort:int, message, privateKey, publicKey
         s.sendall(nonce)
         nounceSigned = s.recv(1024)
         #verify signature from server
-        if verifySignature(publicKeyBank,nounceSigned,nonce):
-            s.sendall("OK".encode())
-            #Get EECDF shared secret
-            derived_key = ephemeralEllipticCurveDiffieHellmanSending(s,privateKey, publicKeyBank)
-            
-            #sign message
-            signature = signwithPrivateKey(privateKey,message)
-            
-            m = pickle.dumps({"message":message,"signature":signature})
-            
-            hashedMessage = hashMessage(m)
+        if not  verifySignature(publicKeyBank,nounceSigned,nonce):
+            s.sendall("NOK".encode())
+            s.close()
+            return 
+        s.sendall("OK".encode())
+        #Get EECDF shared secret
+        derived_key = ephemeralEllipticCurveDiffieHellmanSending(s,privateKey, publicKeyBank)
 
-            #Setup encryption and unpadding
-            iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
-            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-            cipherText = iv + cipher.encrypt(hashedMessage)
-            
-            # Send receive
-            s.sendall(cipherText)
+        if derived_key == None:
+            return 
+        
+        #sign message
+        signature = signwithPrivateKey(privateKey,message)
+        
+        m = pickle.dumps({"message":message,"signature":signature})
+        
+        hashedMessage = hashMessage(m)
+
+        #Setup encryption and unpadding
+        iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+        cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+        cipherText = iv + cipher.encrypt(hashedMessage)
+        
+        # Send receive
+        s.sendall(cipherText)
 
 
 
@@ -282,6 +324,9 @@ def sendRollBackToStore(destIP:str, destPort:int, message: str):
         
         #Get EECDF shared secret
         derived_key = ephemeralEllipticCurveDiffieHellmanStoreSending(s)
+        
+        if derived_key == None:
+            return
         
         #Hash Message
         hasedMessage = hashMessage(message)

@@ -22,6 +22,8 @@ def receiveNewHash(s:socket.socket,message:str):
 
             # Obtain derived key from diffie hellman
             derived_key = ServerModeDiffieHellman(conn)
+            if derived_key == None:
+                return None
 
             # Receive cyphertext
             cipherText = conn.recv(5000)
@@ -64,9 +66,11 @@ def ServerModeDiffieHellman(connection):
     msgHash= connection.recv(1024)
     hasedMessage = pickle.loads(msgHash)
     if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        connection.send("NOK".encode())
         return None
     
     if not verifyHash(hasedMessage):
+        connection.send("NOK".encode())
         return None
     
     client_public_key = serialization.load_pem_public_key(
@@ -87,5 +91,8 @@ def ServerModeDiffieHellman(connection):
 
     # Send the server's public key to the client
     connection.sendall(hashMessage(public_key))
+    
+    if connection.recv(1024) == "NOK".encode():
+        return None
 
     return derived_key

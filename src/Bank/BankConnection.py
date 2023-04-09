@@ -43,15 +43,21 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     hasedMessage =  pickle.loads(received)
     
     if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
-        return
+        conn.send("NOK".encode())
+        conn.close()
+        return None
     
     if not verifyHash(hasedMessage):
-        return
+        conn.send("NOK".encode())
+        conn.close()
+        return None
     
     receivedmsg = pickle.loads(hasedMessage["messageHashed"])
     
     if "msg" not in receivedmsg or "pem" not in receivedmsg:
-        return
+        conn.send("NOK".encode())
+        conn.close()
+        return None
     
     encriptedMsg = receivedmsg["msg"]
     publicKeyBytes = receivedmsg["pem"]
@@ -72,6 +78,7 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     if not verifySignature(publicKeyUser,signedNonce,nonce):
         conn.sendall("NOK".encode())
         conn.close()
+        return None
     
     conn.sendall("OK".encode())
     
@@ -83,7 +90,7 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     
     if(conn.recv(1024).decode()!="OK"):
         conn.close()
-        return
+        return None
     
     return (conn,addr,accountNumber["account"],publicKeyUser)
 
@@ -93,6 +100,9 @@ def receiveMessage(connection:socket,PublicKeyClient,privateKey):
     #Get EECDF shared secret
     derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,privateKey)
 
+    if derived_key == None:
+        return None
+    
     # Receive cyphertext from client
     cipherText = connection.recv(5000)
 
@@ -131,14 +141,17 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
     
     #Verify Hash
     if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        connection.send("NOK".encode())
         return None
     
     if not verifyHash(hasedMessage):
+        connection.send("NOK".encode())
         return None
     
     signMessage = pickle.loads(hasedMessage["messageHashed"])
     
     if "signedPublicKey" not in signMessage or  "public_key" not in signMessage:
+        connection.send("NOK".encode())
         return None
     
     signed_client_public_key_bytes,client_public_key_bytes = signMessage["signedPublicKey"], signMessage["public_key"]
@@ -146,6 +159,7 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
     
     # Verify signature of signed_client_public_key and client_public_key with server private_key 
     if not verifySignature(PublicKeyClient,signed_client_public_key_bytes,client_public_key_bytes):
+        connection.send("NOK".encode())
         return None
 
     # Generate a shared secret
@@ -163,6 +177,9 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
 
     # Send the server's public key and signed public key to the client
     connection.sendall(hashMessage(signMsg))
+    
+    if(connection.recv(1024) == "NOK".encode()):
+        return None
 
     return derived_key
 
@@ -177,6 +194,9 @@ def ClientMode(ip:str,port:int,hashFile):
             return None
         # Do the diffie Hellman
         derived_key = ClientModeDiffieHellman(s)
+        
+        if derived_key == None:
+            return None
                   
         #Setup encryption and unpadding
         iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
@@ -213,17 +233,22 @@ def ClientModeDiffieHellman(s:socket):
 
     # Receive the server's public key
     msgHash= s.recv(1024)
+    if msgHash == "NOK".encode():
+        return None
+    
     hasedMessage = pickle.loads(msgHash)
     if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
+        s.send("NOK".encode())
         return None
     
     if not verifyHash(hasedMessage):
+        s.send("NOK".encode())
         return None
     server_public_key = serialization.load_pem_public_key(
     hasedMessage["messageHashed"]
     #backend=default_backend()
     )
-
+    s.send("OK".encode())
     # Generate a shared secret
     shared_secret = private_key.exchange(ec.ECDH(), server_public_key)
 

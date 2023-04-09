@@ -29,7 +29,11 @@ def main(argv: list[str]):
         while True:
             (conn, addr) = receiveNewConnection(socket)
             
-            receiveMsg,derived_key = receiveMessage(conn)
+            result = receiveMessage(conn)
+            if result == None:
+                conn.close()
+                continue
+            receiveMsg,derived_key = result
             
             hashedMessage = pickle.loads(receiveMsg)
     
@@ -75,6 +79,12 @@ def main(argv: list[str]):
                     
                     data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
                     
+                    if data == None:
+                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                        conn.close()
+                        continue
+                    
+                    
                     hashedMessage = pickle.loads(data)
                     
                     if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
@@ -104,6 +114,7 @@ def main(argv: list[str]):
                     
                     print(message)
                     sendMessage(conn,messageSigned["message"],derived_key)
+                    conn.close()
                     
                 case "RollBack":
                     if "contentFile" not in  withdrawCardMessage or "ShoppingValue" not in  withdrawCardMessage or "OriginalMessageType" not in  withdrawCardMessage:
