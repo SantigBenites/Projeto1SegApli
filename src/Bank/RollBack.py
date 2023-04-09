@@ -10,7 +10,7 @@ def rollBackNewAccountMode(signedMessage, message, PublicKeyUser):
         
     #Authentication
     if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
 
     # Start Storage Singleton
     storage = BankStorageSingleton()
@@ -52,12 +52,12 @@ def rollBackDepositMode(signedMessage, message):
     PublicKeyUser = storage.getPublicKeyUser(account)
     
     if(PublicKeyUser == None):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
         
     
     #Authentication
     if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
     
     print(f"Before rollBack \n {storage.balances}")
     storage.addAccountBalance(account,-deposit)
@@ -89,7 +89,7 @@ def rollBackCreateCardMode(signedMessage, message):
     PublickeyUser = storage.getPublicKeyUser(accountName)
     
     if(PublickeyUser == None):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
     
     if not verifySignature(PublickeyUser,signedMessage["signature"],signedMessage["message"]):
          return json.dumps({"Error":130}).encode('utf8')
@@ -112,10 +112,10 @@ def rollBackWithdrawMode(signedMessage, message,privateKey,PublicKeyStore):
 
     #verifies signature of store
     if not verifySignature(PublicKeyStore,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":131}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
     
     if "contentFile" not in message or "ShoppingValue" not in message:
-        return json.dumps({"Error":132}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
     
     fileContent = message["contentFile"]
     
@@ -125,7 +125,7 @@ def rollBackWithdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     
     msg = json.loads(decriptedData)
     if "account" not  in msg or "vcc_amount" not  in msg or "vcc_file" not  in msg:
-        return json.dumps({"Error":133}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
     
     # Get message values
     account = msg["account"] 
@@ -140,30 +140,30 @@ def rollBackWithdrawMode(signedMessage, message,privateKey,PublicKeyStore):
         argsAreValidBalances(str(vcc_amount)) and 
         argsAreValidFileNames(str(vcc_file)) and 
         argsAreValidBalances(str(shoppingValue))):
-            return 135
+            return json.dumps({"Error":130}).encode('utf8')
     
     PublicKeyClient = storage.getPublicKeyUser(account)
     
     if PublicKeyClient == None:
-        return json.dumps({"Error":136}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
     
     #verify signatures
     if not verifySignature(PublicKeyClient,fileContent["signature"],fileContent["message"]):
-        return json.dumps({"Error":137}).encode('utf8')
+        return json.dumps({"Error":63}).encode('utf8')
 
 
     if shoppingValue < 0 :
-        return json.dumps({"Error":138}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
 
     bool = storage.isActiveCard(account,vcc_file)
     
     if bool:
-        return json.dumps({"Error":139}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
 
     amount = storage.getUsedCreditCardBalance(account,vcc_file)
 
     if(amount+shoppingValue != vcc_amount):
-        return json.dumps({"Error":140}).encode('utf8')
+        return json.dumps({"Error":130}).encode('utf8')
 
     # Check if credit card as the required amount
     print(f"Before rollBack \n {storage.cards} \n {storage.balances}")
