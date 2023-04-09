@@ -43,26 +43,36 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     hasedMessage =  pickle.loads(received)
     
     if "messageHashed" not in hasedMessage or "hash" not in hasedMessage:
-        conn.send("NOK".encode())
+       # conn.send("NOK".encode())
         conn.close()
         return None
     
     if not verifyHash(hasedMessage):
-        conn.send("NOK".encode())
+        #conn.send("NOK".encode())
         conn.close()
         return None
     
     receivedmsg = pickle.loads(hasedMessage["messageHashed"])
     
     if "msg" not in receivedmsg or "pem" not in receivedmsg:
-        conn.send("NOK".encode())
+        #conn.send("NOK".encode())
         conn.close()
         return None
     
     encriptedMsg = receivedmsg["msg"]
     publicKeyBytes = receivedmsg["pem"]
-    decripted = decryptWithPrivateKey(privateKey,encriptedMsg)
+    
+    try:
+        decripted = decryptWithPrivateKey(privateKey,encriptedMsg)
+    except:
+        #conn.send("NOK".encode())
+        conn.close()
+        return None
+    
     accountNumber = pickle.loads(decripted)
+    if "account" not in accountNumber:
+        conn.close()
+        return None
     
     store = BankStorageSingleton()
     
@@ -76,7 +86,7 @@ def receiveNewConnection(socket:socket.socket,privateKey):
     conn.sendall(nonce)
     signedNonce = conn.recv(1024)
     if not verifySignature(publicKeyUser,signedNonce,nonce):
-        conn.sendall("NOK".encode())
+        #conn.sendall("NOK".encode())
         conn.close()
         return None
     
@@ -182,6 +192,7 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
         return None
 
     return derived_key
+
 
 
 def ClientMode(ip:str,port:int,hashFile):

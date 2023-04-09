@@ -1,6 +1,7 @@
 import pickle
 import secrets
 import sys, socket, json, os
+from time import sleep
 from utils import *
 from Cripto import *
 from MBecConnection import *
@@ -66,15 +67,17 @@ def newAccountMode(argv:list[str]):
     
     publicKey = getPublicKey(privateKey)
     
+    #reads public Key
+    publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
+    
     # Generate message
     newAccountMessage = pickle.dumps({
         "MessageType": "NewAccount",
         "account": account,
-        "balance": balance
+        "balance": balance,
+        "timeStamp": getTimeStamp()
     })
     
-    #reads public Key
-    publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
 
     # Send receive message from Bank
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage,privateKey,publicKeyBank,account,publicKey)
@@ -96,7 +99,8 @@ def newAccountMode(argv:list[str]):
             "MessageType": "RollBack",
             "OriginalMessageType": "NewAccount",
             "account": account,
-            "balance": balance
+            "balance": balance,
+            "timeStamp": getTimeStamp()
         })
         sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
 
@@ -186,7 +190,11 @@ def depositMode(argv:list[str]):
     
     privateKey = readPrivateKeyFromFile(filePath)
 
-    m = pickle.dumps({"MessageType": "Deposit", "Amount":amount, "account":account})
+    m = pickle.dumps({"MessageType": "Deposit",
+                      "Amount":amount, 
+                      "account":account,
+                      "timeStamp": getTimeStamp()
+                    })
     
     publicKey = getPublicKey(privateKey)
     
@@ -207,7 +215,8 @@ def depositMode(argv:list[str]):
             "MessageType": "RollBack",
             "OriginalMessageType": "Deposit",
             "Amount": amount,
-            "account": account
+            "account": account,
+            "timeStamp": getTimeStamp()
         })
         sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
 
@@ -295,7 +304,8 @@ def createCardMode(argv:list[str]):
     newCardMessage = pickle.dumps({
         "MessageType": "CreateCard",
         "account": account,
-        "amount": amount
+        "amount": amount,
+        "timeStamp": getTimeStamp()
     })
 
 
@@ -319,7 +329,8 @@ def createCardMode(argv:list[str]):
             "MessageType": "RollBack",
             "OriginalMessageType": "CreateCard",
             "account": account,
-            "amount": amount
+            "amount": amount,
+            "timeStamp": getTimeStamp()
         })
         sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
 
@@ -353,7 +364,8 @@ def createCardMode(argv:list[str]):
             "MessageType": "RollBack",
             "OriginalMessageType": "CreateCard",
             "account": account,
-            "amount": amount
+            "amount": amount,
+            "timeStamp": getTimeStamp()
         })
         sendRollBackMessage(ipBankAddress,bkPort,rollBackmessage,privateKey,publicKeyBank,account,publicKey)
 
@@ -416,7 +428,9 @@ def getBalanceMode(argv:list[str]):
         argsAreValidFileNames(authFile)):
             return 130
      
-    m = pickle.dumps({"MessageType": "Balance", "account":account})
+    m = pickle.dumps({"MessageType": "Balance",
+                      "account":account,
+                      "timeStamp": getTimeStamp()})
     
     publicKey = getPublicKey(privateKey)
     
@@ -523,7 +537,8 @@ def withdrawMode(argv:list[str]):
         "contentFile": p,
         "ShoppingValue": shoppingValue,
         "IPClient": ip ,
-        "portClient":port
+        "portClient":port,
+        "timeStamp": getTimeStamp()
     })
     
     
@@ -546,6 +561,7 @@ def withdrawMode(argv:list[str]):
             "OriginalMessageType": "WithdrawCard",
             "contentFile": p,
             "ShoppingValue": shoppingValue,
+            "timeStamp": getTimeStamp()
         })
         sendRollBackToStore(ipStoreAddress,stPort,rollBackmessage)
 

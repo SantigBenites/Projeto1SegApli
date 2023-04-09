@@ -1,9 +1,20 @@
 import hashlib
+import datetime
 import pickle
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 import cryptography
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography import x509
+
+def getTimeStamp():
+    dt = datetime.datetime.now()
+    return datetime.datetime.timestamp(dt)
+
+def verifyTimeStampValidity(ClientTimeStamp):
+    dt = getTimeStamp()
+    #10 min
+    return (dt-ClientTimeStamp) < 600
+
 
 def hashMessage (message):
     hashMsg  = hashlib.sha256(message).hexdigest()

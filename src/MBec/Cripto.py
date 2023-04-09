@@ -1,10 +1,24 @@
+from datetime import datetime
 import hashlib
+import json
 import pickle
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 import cryptography
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography import x509
 
+def verifySignatureStructure(hashedMessage,signedMessage,publicKeyBank):
+    signedMessage = pickle.loads(hashedMessage)
+    if "message" not in signedMessage or "signature" not in signedMessage:
+        return 130
+    receivedMessage = json.loads(signedMessage["message"].decode('utf8'))
+    if not verifySignature(publicKeyBank,signedMessage["signature"],signedMessage["message"]):
+        return 130
+    return receivedMessage
+
+def getTimeStamp():
+    dt = datetime.now()
+    return datetime.timestamp(dt)
 
 def hashMessage (message):
     hashMsg  = hashlib.sha256(message).hexdigest()

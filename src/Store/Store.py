@@ -114,6 +114,12 @@ def main(argv: list[str]):
                     
                     print(message)
                     sendMessage(conn,messageSigned["message"],derived_key)
+                    
+                    message = pickle.dumps({"MessageType": "RollBack",
+                                            "OriginalMessageType": "WithdrawCard",
+                                            "contentFile": withdrawCardMessage["fileContent"],
+                                            "ShoppingValue": withdrawCardMessage["ShoppingValue"]})
+                    
                     conn.close()
                     
                 case "RollBack":
@@ -121,13 +127,15 @@ def main(argv: list[str]):
                         sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
                         conn.close()
                         continue
+                    
 
                     signature = signwithPrivateKey(privateKey, hashedMessage["messageHashed"])
                     
                     msg =  pickle.dumps({"message": hashedMessage["messageHashed"], "signature": signature})
                     
                     sendRollBackToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
-                
+
+                    
 
 
     

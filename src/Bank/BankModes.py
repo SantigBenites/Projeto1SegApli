@@ -11,7 +11,7 @@ current_working_directory = os.getcwd()
 
 def newAccountMode(signedMessage, message,PublicKeyUser):
     
-    if "account" not in message or "balance" not in message:
+    if "account" not in message or "balance" not in message or "timeStamp" not in message:
         return json.dumps({"Error":130}).encode('utf8')
         
     #Authentication
@@ -22,12 +22,14 @@ def newAccountMode(signedMessage, message,PublicKeyUser):
     storage = BankStorageSingleton()
     accountName = message["account"]
     balance = message["balance"]
+    timeStampClient = message["timeStamp"]
+
 
     # Verify message parameters are valid
     if  not (
             argsAreValidAccountNames(str(accountName)) and
-            argsAreValidBalances(str(balance))):
-                
+            argsAreValidBalances(str(balance)) and
+            verifyTimeStampValidity(timeStampClient)):
                 return json.dumps({"Error":130}).encode('utf8')
 
     # Generating response
@@ -44,17 +46,19 @@ def newAccountMode(signedMessage, message,PublicKeyUser):
 
 def depositMode(signedMessage, message):
     
-    if "account" not in message or "Amount" not in message:
+    if "account" not in message or "Amount" not in message or "timeStamp" not in message:
         return  json.dumps({"Error":130}).encode('utf8')
 
     storage = BankStorageSingleton()
     account = message["account"]
     deposit = message["Amount"]
+    timeStampClient = message["timeStamp"]
 
     # Verify message parameters are valid
     if  not (
         argsAreValidAccountNames(str(account)) and
-        argsAreValidBalances(str(deposit))):
+        argsAreValidBalances(str(deposit)) and
+        verifyTimeStampValidity(timeStampClient)):
             
             return json.dumps({"Error":130}).encode('utf8')
     
@@ -78,17 +82,21 @@ def depositMode(signedMessage, message):
 # Example: {"account":"55555","vcc_amount":12.00, "vcc_file":"55555_2.card"}
 def createCardMode(signedMessage, message):
     
-    if "account" not in message or "amount" not in message:
+    if "account" not in message or "amount" not in message or "timeStamp" not in message:
         return json.dumps({"Error":130}).encode('utf8')
 
     storage = BankStorageSingleton()
     accountName = message["account"]
     amount = message["amount"]
+    timeStampClient = message["timeStamp"]
+
 
     # Verify message parameters are valid
     if  not (
         argsAreValidAccountNames(str(accountName)) and
-        argsAreValidBalances(str(amount))):
+        argsAreValidBalances(str(amount)) and
+        verifyTimeStampValidity(timeStampClient)
+        ):
             
             return json.dumps({"Error":130}).encode('utf8')
     
@@ -131,14 +139,17 @@ def createCardMode(signedMessage, message):
 
 def getBalanceMode(signedMessage, message):
     
-    if "account" not in message:
+    if "account" not in message or "timeStamp" not in message:
         return json.dumps({"Error":130}).encode('utf8')
     
     account = message["account"]
+    timeStampClient = message["timeStamp"]
 
     # Verify message parameters are valid
     if  not (
-        argsAreValidAccountNames(str(account))):
+        argsAreValidAccountNames(str(account)) and
+        verifyTimeStampValidity(timeStampClient)
+        ):
             
             return json.dumps({"Error":130}).encode('utf8')
     
@@ -163,8 +174,7 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     #verifies signature of store
     if not verifySignature(PublicKeyStore,signedMessage["signature"],signedMessage["message"]):
         return json.dumps({"Error":130}).encode('utf8')
-    
-    
+
     
     if "contentFile" not in message or "ShoppingValue" not in message or "IPClient" not in message or "portClient" not in message:
         return json.dumps({"Error":130}).encode('utf8')
@@ -186,6 +196,7 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     shoppingValue = message["ShoppingValue"]
     userIP = message["IPClient"]
     userPort = message["portClient"]
+    timeStampClient = message["timeStamp"]
 
     # All Validation for all inputs
     # Validate port is int
@@ -200,7 +211,8 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
         argsAreValidPort(userPort) and 
         argsAreValidBalances(str(vcc_amount)) and 
         argsAreValidFileNames(str(vcc_file)) and 
-        argsAreValidBalances(str(shoppingValue))):
+        argsAreValidBalances(str(shoppingValue)) and
+        verifyTimeStampValidity(timeStampClient)):
             return 130
     
     PublicKeyClient = storage.getPublicKeyUser(account)

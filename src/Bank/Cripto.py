@@ -9,6 +9,15 @@ from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
 
+def getTimeStamp():
+    dt = datetime.datetime.now()
+    return datetime.datetime.timestamp(dt)
+
+def verifyTimeStampValidity(ClientTimeStamp):
+    dt = getTimeStamp()
+    #10 min
+    return (dt-ClientTimeStamp) < 600
+
 
 def hashMessage (message):
     hashMsg  = hashlib.sha256(message).hexdigest()
