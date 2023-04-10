@@ -36,9 +36,10 @@ def receiveNewHash(s:socket.socket,message:str):
             receivedMessage = cipher.decrypt(ciphertext)
 
             receivedHash = pickle.loads(receivedMessage)["hashFile"]
+            print(receivedHash)
 
             originalHah =  hashlib.sha256(message).hexdigest()
-
+            print(originalHah)
             if receivedHash == originalHah:
                 # Send ok to bank
                 #Setup decryption and unpadding

@@ -37,13 +37,13 @@ def main(argv: list[str]):
             hashedMessage = pickle.loads(receiveMsg)
     
             if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
-                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                sendMessage(conn,json.dumps({"Error": 130, "timeStamp": getTimeStamp()}).encode(),derived_key)
                 conn.close()
                 continue
             
             
             if not verifyHash(hashedMessage):
-                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                sendMessage(conn,json.dumps({"Error": 130, "timeStamp": getTimeStamp()}).encode(),derived_key)
                 conn.close()
                 continue
             
@@ -51,7 +51,7 @@ def main(argv: list[str]):
             withdrawCardMessage = pickle.loads(hashedMessage["messageHashed"])
 
             if "MessageType" not in  withdrawCardMessage:
-                sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                 conn.close()
                 continue
             
@@ -61,26 +61,28 @@ def main(argv: list[str]):
                 case "WithdrawCard":
                     
                     if "contentFile" not in  withdrawCardMessage or "ShoppingValue" not in  withdrawCardMessage or "IPClient" not in  withdrawCardMessage or "portClient" not in withdrawCardMessage:
-                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                        sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
                         
                     fileContent = withdrawCardMessage["contentFile"]
                     if "ip" not in fileContent or  "port" not in fileContent or "message" not in fileContent or "signature" not in fileContent:
-                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                        sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
 
+                    msgTime = pickle.dumps({"MessageType": "WithdrawCard", "messageClient": hashedMessage["messageHashed"], "timeStamp": getTimeStamp()})
                     
-                    signature = signwithPrivateKey(privateKey, hashedMessage["messageHashed"])
+                    signature = signwithPrivateKey(privateKey, msgTime)
                     
-                    msg =  pickle.dumps({"message": hashedMessage["messageHashed"], "signature": signature})
+                    
+                    msg =  pickle.dumps({"message": msgTime,"signature": signature})
                     
                     data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
                     
                     if data == None:
-                        print("protocol_error")
-                        sendMessage(conn,json.dumps({"Error": 63}).encode(),derived_key)
+                        print("protocol_errorsenMessageToBank")
+                        sendMessage(conn,json.dumps({"Error": 63,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
                     
@@ -88,12 +90,12 @@ def main(argv: list[str]):
                     hashedMessage = pickle.loads(data)
                     
                     if "messageHashed" not in hashedMessage or "hash" not in hashedMessage:
-                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                        sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
                     
                     if not verifyHash(hashedMessage):
-                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                        sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
                     
@@ -101,27 +103,38 @@ def main(argv: list[str]):
                     messageSigned = pickle.loads(hashedMessage["messageHashed"])
                     
                     if not verifySignature(publicKeyBank,messageSigned["signature"],messageSigned["message"]):
-                        sendMessage(conn,json.dumps({"Error": 130}.encode(),derived_key))
+                        sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}.encode(),derived_key))
                         conn.close()
                         continue
                         
                     message = json.loads(messageSigned["message"])
                     
-                    if "vcc_file" not in message or "vcc_amount_used" not in message:
-                        sendMessage(conn,json.dumps({"Error": 130}).encode(),derived_key)
+                    if "vcc_file" not in message or "vcc_amount_used" not in message or "timeStamp" not in message :
+                        sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
+                        conn.close()
+                        continue
+                    
+                    if not verifyTimeStampValidity(message["timeStamp"]):
+                        sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
                     
                     print(message)
+                    
+                    msg = json.dumps({"vcc_file": message["vcc_file"],
+                                    "vcc_amount_used": message["vcc_amount_used"],
+                                    "bankStamp": message["timeStamp"],
+                                    "storeStamp": getTimeStamp()}).encode()
 
-                    message = sendMessage(conn,messageSigned["message"],derived_key)
+                    message = sendMessage(conn,msg,derived_key)
                     if message == None:
-                        print("protocol_error")
+                        print("protocol_errorClient")
 
                         message = pickle.dumps({"MessageType": "RollBack",
                                             "OriginalMessageType": "WithdrawCard",
                                             "contentFile": withdrawCardMessage["contentFile"],
-                                            "ShoppingValue": withdrawCardMessage["ShoppingValue"]})
+                                            "ShoppingValue": withdrawCardMessage["ShoppingValue"],
+                                            "timeStamp": getTimeStamp()})
                         
                         signature = signwithPrivateKey(privateKey, message)
                     

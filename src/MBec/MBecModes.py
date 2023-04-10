@@ -78,6 +78,7 @@ def newAccountMode(argv:list[str]):
         "timeStamp": getTimeStamp()
     })
     
+    
 
     # Send receive message from Bank
     messageEncode = sendMessage(ipBankAddress,bkPort,newAccountMessage,privateKey,publicKeyBank,account,publicKey)
@@ -118,7 +119,10 @@ def newAccountMode(argv:list[str]):
         return 130
 
     # Check if Bank response is valid or Error 
-    if "account" not in returnMessage or "initial_balance" not in returnMessage:
+    if "account" not in returnMessage or "initial_balance" not in returnMessage or "timeStamp" not in returnMessage:
+        return 130
+    
+    if not verifyTimeStampValidity(returnMessage["timeStamp"]):
         return 130
     
     lastUsedAccount = account
@@ -235,7 +239,10 @@ def depositMode(argv:list[str]):
         return 130
     
     
-    if "account" not in receivedMessage or "deposit" not in  receivedMessage:
+    if "account" not in receivedMessage or "deposit" not in  receivedMessage or "timeStamp" not in receivedMessage:
+        return 130
+    
+    if not verifyTimeStampValidity(receivedMessage["timeStamp"]):
         return 130
     
     lastUsedAccount = account
@@ -347,13 +354,17 @@ def createCardMode(argv:list[str]):
     
     returnMessage = json.loads(signedMessage["message"].decode('utf8'))
 
-    if not verifySignature(publicKeyBank,signedMessage["signature"],signedMessage["message"]):
+    if not verifySignature(publicKeyBank,signedMessage["signature"],signedMessage["message"]) :
         return 130
 
 
     # Check if Bank response is valid or Error 
-    if "account" not in returnMessage or "vcc_amount" not in returnMessage or "vcc_file" not  in returnMessage:
+    if "account" not in returnMessage or "vcc_amount" not in returnMessage or "vcc_file" not in returnMessage or "timeStamp" not in returnMessage:
         return 130
+    
+    if not verifyTimeStampValidity(returnMessage["timeStamp"]):
+        return 130
+    
        
         
     path = f"{current_working_directory}/src/MBec/creditCard/{returnMessage['vcc_file']}"
@@ -460,8 +471,12 @@ def getBalanceMode(argv:list[str]):
     
     receivedMessage = json.loads(signedMessage["message"].decode('utf8'))
     
-    if "account"  not in receivedMessage or "balance" not in receivedMessage:
+    if "account"  not in receivedMessage or "balance" not in receivedMessage or "timeStamp" not in receivedMessage:
         return 130
+    
+    if not verifyTimeStampValidity(receivedMessage["timeStamp"]):
+        return 130
+    
     
     lastUsedAccount = account
     return receivedMessage
@@ -574,6 +589,12 @@ def withdrawMode(argv:list[str]):
     
     #Ok
     returnMessage = json.loads(hashedMessage["messageHashed"])
+    
+    if "vcc_file" not in returnMessage or "vcc_amount_used" not in returnMessage or "bankStamp" not in returnMessage or "storeStamp" not in returnMessage:
+        return 130
+    
+    if not verifyTimeStampValidity(returnMessage["bankStamp"]) or not verifyTimeStampValidity(returnMessage["storeStamp"]):
+        return 130
 
     if "Error" in returnMessage:
         print("protocol_error")

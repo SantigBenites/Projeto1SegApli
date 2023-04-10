@@ -12,9 +12,8 @@ Project done with python
 
 # TODO
 
-- Add more needed verifications like time part of message
-- timeouts
-- error messages
+- Add more needed verifications like time part of message DH 
+- testing 
 
 
 # Git commands

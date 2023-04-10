@@ -119,7 +119,7 @@ def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             # Start Connection
             s.connect((destIP, destPort))
-            s.settimeout(3)
+            s.settimeout(5)
             #Get EECDF shared secret
             derived_key = ephemeralEllipticCurveDiffieHellmanStoreSending(s)
             
@@ -164,7 +164,8 @@ def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
 
             return plaintext if Confirmation else None
         
-    except Exception:
+    except Exception as e:
+        print(e)
         s.close()
         return None
         

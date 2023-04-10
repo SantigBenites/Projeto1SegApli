@@ -16,6 +16,11 @@ def verifySignatureStructure(hashedMessage,signedMessage,publicKeyBank):
         return 130
     return receivedMessage
 
+def verifyTimeStampValidity(ClientTimeStamp):
+    dt = getTimeStamp()
+    #10 min
+    return (dt-ClientTimeStamp) < 600
+
 def getTimeStamp():
     dt = datetime.now()
     return datetime.timestamp(dt)

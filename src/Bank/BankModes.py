@@ -12,11 +12,11 @@ current_working_directory = os.getcwd()
 def newAccountMode(signedMessage, message,PublicKeyUser):
     
     if "account" not in message or "balance" not in message or "timeStamp" not in message:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
         
     #Authentication
     if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":63}).encode('utf8')
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
 
     # Start Storage Singleton
     storage = BankStorageSingleton()
@@ -35,7 +35,8 @@ def newAccountMode(signedMessage, message,PublicKeyUser):
     # Generating response
     newAccountResponse = json.dumps({
         "account":accountName,
-        "initial_balance":balance
+        "initial_balance":balance,
+        "timeStamp": getTimeStamp()
     }).encode('utf8')
 
     # Updating runtime database
@@ -47,7 +48,7 @@ def newAccountMode(signedMessage, message,PublicKeyUser):
 def depositMode(signedMessage, message):
     
     if "account" not in message or "Amount" not in message or "timeStamp" not in message:
-        return  json.dumps({"Error":130}).encode('utf8')
+        return  json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
 
     storage = BankStorageSingleton()
     account = message["account"]
@@ -60,22 +61,22 @@ def depositMode(signedMessage, message):
         argsAreValidBalances(str(deposit)) and
         verifyTimeStampValidity(timeStampClient)):
             
-            return json.dumps({"Error":130}).encode('utf8')
+            return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
     
     PublicKeyUser = storage.getPublicKeyUser(account)
     
     if(PublicKeyUser == None):
-        return json.dumps({"Error":63}).encode('utf8')
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
         
     
     #Authentication
     if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":63}).encode('utf8')
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
     
     storage.addAccountBalance(account,deposit)
     
 
-    response = json.dumps({"account":account, "deposit":deposit}).encode('utf8')
+    response = json.dumps({"account":account, "deposit":deposit, "timeStamp": getTimeStamp()}).encode('utf8')
 
     return response
 
@@ -83,7 +84,7 @@ def depositMode(signedMessage, message):
 def createCardMode(signedMessage, message):
     
     if "account" not in message or "amount" not in message or "timeStamp" not in message:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
 
     storage = BankStorageSingleton()
     accountName = message["account"]
@@ -98,26 +99,26 @@ def createCardMode(signedMessage, message):
         verifyTimeStampValidity(timeStampClient)
         ):
             
-            return json.dumps({"Error":130}).encode('utf8')
+            return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
     
     PublickeyUser = storage.getPublicKeyUser(accountName)
     
     if(PublickeyUser == None):
-        return json.dumps({"Error":63}).encode('utf8')
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
 
     
     # Checking for account balance
     accountBalance = storage.getAccountBalance(accountName)
     if amount > accountBalance:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
     # Check for other active credit cards
     bool = storage.areActiveCards(accountName)
     if bool:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
     
 
     if not verifySignature(PublickeyUser,signedMessage["signature"],signedMessage["message"]):
-         return json.dumps({"Error":63}).encode('utf8')
+         return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
     # Getting card name
     numberOfCardForAccount = storage.getCreditCardNumber(accountName) + 1
     cardName = f"{accountName}_{numberOfCardForAccount}"
@@ -128,7 +129,8 @@ def createCardMode(signedMessage, message):
     newCardResponse = json.dumps({
         "account":accountName,
         "vcc_amount":amount,
-        "vcc_file": f"{cardName}.card"
+        "vcc_file": f"{cardName}.card",
+        "timeStamp": getTimeStamp()
     }).encode('utf8')
 
     # Updating runtime database
@@ -140,7 +142,7 @@ def createCardMode(signedMessage, message):
 def getBalanceMode(signedMessage, message):
     
     if "account" not in message or "timeStamp" not in message:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
     
     account = message["account"]
     timeStampClient = message["timeStamp"]
@@ -158,12 +160,12 @@ def getBalanceMode(signedMessage, message):
     publicKeyUser = storage.getPublicKeyUser(account)
     
     if(publicKeyUser == None):
-        return json.dumps({"Error":63}).encode('utf8')
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
         
     if not verifySignature(publicKeyUser,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":63}).encode('utf8')
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
      
-    response = json.dumps({"account": account, "balance": storage.getAccountBalance(account)})
+    response = json.dumps({"account": account, "balance": storage.getAccountBalance(account),"timeStamp": getTimeStamp()})
         
     return response.encode('utf8')
     
@@ -171,24 +173,33 @@ def getBalanceMode(signedMessage, message):
 
 def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     
+    if  "messageClient" not in message or "timeStamp" not in message:
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
+    
+    if not verifyTimeStampValidity(message["timeStamp"]):
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
+    
     #verifies signature of store
     if not verifySignature(PublicKeyStore,signedMessage["signature"],signedMessage["message"]):
-        return json.dumps({"Error":63}).encode('utf8')
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
     
+    message = pickle.loads(message["messageClient"])
     
-    
-    if "contentFile" not in message or "ShoppingValue" not in message or "IPClient" not in message or "portClient" not in message:
-        return json.dumps({"Error":130}).encode('utf8')
+    if "contentFile" not in message or "ShoppingValue" not in message or "IPClient" not in message or "portClient" not in message or "timeStamp" not in message:
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
     
     fileContent = message["contentFile"]
     
-    decriptedData =  decryptWithPrivateKey(privateKey, fileContent["message"])
+    try:
+        decriptedData =  decryptWithPrivateKey(privateKey, fileContent["message"])
+    except:
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
     
     storage = BankStorageSingleton()
     
     msg = json.loads(decriptedData)
     if "account" not  in msg or "vcc_amount" not  in msg or "vcc_file" not  in msg:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
     
     # Get message values
     account = msg["account"] 
@@ -204,7 +215,7 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     if safe_execute("error",TypeError,int,userPort) != "error":
         userPort = int(userPort)
     else:
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
     # Validate with regex
     if  not (
         argsAreValidAccountNames(str(account)) and
@@ -219,25 +230,25 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
     PublicKeyClient = storage.getPublicKeyUser(account)
     
     if PublicKeyClient == None:
-        return json.dumps({"Error":63}).encode('utf8')
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
     
     #verify signatures
     if not verifySignature(PublicKeyClient,fileContent["signature"],fileContent["message"]):
-        return json.dumps({"Error":63}).encode('utf8')
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8')
 
 
     if shoppingValue < 0 :
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
 
     bool = storage.isActiveCard(account,vcc_file)
     
     if not bool:
-        return json.dumps({"Error":133}).encode('utf8')
+        return json.dumps({"Error":133,"timeStamp": getTimeStamp()}).encode('utf8')
 
     amount = storage.getCreditCardBalance(account,vcc_file)
     
     if(amount != vcc_amount):
-        return json.dumps({"Error":130}).encode('utf8')
+        return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
 
     # Get Hash of file
     fileHash = hashlib.sha256(pickle.dumps(message)).hexdigest()
@@ -245,17 +256,17 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
 
     # Check if the client socket timed out
     if clientResponse == None:
-        print("protocol_error")
-        return json.dumps({"Error":63}).encode('utf8') 
+        print("protocol_errorClientResponse")
+        return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8') 
 
     # Check if credit card as the required amount
     if amount >= shoppingValue:
         storage.updateCreditCardBalance(account,vcc_file, amount-shoppingValue)
         storage.addAccountBalance(account,-shoppingValue)
-        message = json.dumps({"vcc_file": vcc_file , "vcc_amount_used": shoppingValue})
+        message = json.dumps({"vcc_file": vcc_file , "vcc_amount_used": shoppingValue,"timeStamp": getTimeStamp()})
 
     else:
-        message = json.dumps({"Error":130})
+        message = json.dumps({"Error":130,"timeStamp": getTimeStamp()})
         
     return message.encode('utf8')
 
