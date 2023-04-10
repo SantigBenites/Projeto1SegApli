@@ -120,11 +120,17 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank,priva
             #sends account number
             s.sendall(hashedMessage)
             
-            #Authentication of MBEC
+            #Authentication of Store
             nonceReceived = s.recv(1024) 
+            nonceMsg = pickle.loads(nonceReceived)
             
-            #if nonceReceived == "NOK".encode() :
-            #    return None
+            if "nonce" not in nonceMsg or "timeStamp" not in nonceMsg:
+                s.close()
+                return None
+            
+            if not verifyTimeStampValidity(nonceMsg["timeStamp"]):
+                s.close()
+                return None
                 
             s.sendall(signwithPrivateKey(privateKey,nonceReceived))
             if(s.recv(1024).decode()!="OK"):
@@ -133,11 +139,12 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank,priva
 
             #Authenticates Bank
             nonce = secrets.token_bytes(100)
-            s.sendall(nonce)
+            nonceMSg = pickle.dumps({"nonce": nonce, "timeStamp": getTimeStamp()})
+            s.sendall(nonceMSg)
             nounceSigned = s.recv(1024)
             
             #verify signature from server
-            if not  verifySignature(publicKeyBank,nounceSigned,nonce):
+            if not  verifySignature(publicKeyBank,nounceSigned,nonceMSg):
                 #s.sendall("NOK".encode())
                 s.close()
                 return None
@@ -318,11 +325,17 @@ def sendRollBackToBank(destIP:str, destPort:int, message: str,publicKeyBank,priv
         s.sendall(hashedMessage)
         
         #Authentication of MBEC
-        nonceReceived = s.recv(1024) 
+        nonceReceived = s.recv(1024)
+            
+        nonceMsg = pickle.loads(nonceReceived)
         
-        if nonceReceived == "NOK".encode() :
+        if "nonce" not in nonceMsg or "timeStamp" not in nonceMsg:
             s.close()
-            return 
+            return None
+        
+        if not verifyTimeStampValidity(nonceMsg["timeStamp"]):
+            s.close()
+            return None
         
         s.sendall(signwithPrivateKey(privateKey,nonceReceived))
         if(s.recv(1024).decode()!="OK"):
@@ -331,12 +344,14 @@ def sendRollBackToBank(destIP:str, destPort:int, message: str,publicKeyBank,priv
 
         #Authenticates Bank
         nonce = secrets.token_bytes(100)
-        s.sendall(nonce)
+        nonceMSg = pickle.dumps({"nonce": nonce, "timeStamp": getTimeStamp()})
+
+        s.sendall(nonceMSg)
         nounceSigned = s.recv(1024)
         
         #verify signature from server
-        if not  verifySignature(publicKeyBank,nounceSigned,nonce):
-            s.sendall("NOK".encode())
+        if not  verifySignature(publicKeyBank,nounceSigned,nonceMSg):
+            #s.sendall("NOK".encode())
             s.close()
             return 
             

@@ -91,7 +91,7 @@ def main(argv: list[str]):
                     data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
                     
                     if data == None:
-                        print("protocol_errorsenMessageToBank")
+                        print("protocol_error")
                         sendMessage(conn,json.dumps({"Error": 63,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
@@ -120,11 +120,13 @@ def main(argv: list[str]):
                     message = json.loads(messageSigned["message"])
                     
                     if "vcc_file" not in message or "vcc_amount_used" not in message or "timeStamp" not in message :
+                        print(message)
                         sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
                     
                     if not verifyTimeStampValidity(message["timeStamp"]):
+                        print(message)
                         sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue

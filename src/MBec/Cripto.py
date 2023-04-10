@@ -99,7 +99,6 @@ def verifySignature(publicKey, signature, message):
             hashes.SHA256()
             )
     except cryptography.exceptions.InvalidSignature:
-        print("Invalide signature")
         return False
     return True
 

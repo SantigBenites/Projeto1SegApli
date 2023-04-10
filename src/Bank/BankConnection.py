@@ -84,9 +84,11 @@ def receiveNewConnection(s:socket.socket,privateKey):
             
         #Authentication of MBEC
         nonce = secrets.token_bytes(100)
-        conn.sendall(nonce)
+        nonceMSg = pickle.dumps({"nonce": nonce, "timeStamp": getTimeStamp()})
+        
+        conn.sendall(nonceMSg)
         signedNonce = conn.recv(1024)
-        if not verifySignature(publicKeyUser,signedNonce,nonce):
+        if not verifySignature(publicKeyUser,signedNonce,nonceMSg):
             #conn.sendall("NOK".encode())
             conn.close()
             return None
@@ -95,8 +97,20 @@ def receiveNewConnection(s:socket.socket,privateKey):
     
 
         #Bank Authentication
-        nounce = conn.recv(1024)
-        nounceSigned = signwithPrivateKey(privateKey,nounce)
+        nonce = conn.recv(1024)
+        
+        nonceMsg = pickle.loads(nonce)
+            
+        if "nonce" not in nonceMsg or "timeStamp" not in nonceMsg:
+            conn.close()
+            return None
+        
+        if not verifyTimeStampValidity(nonceMsg["timeStamp"]):
+            conn.close()
+            return None
+        
+        
+        nounceSigned = signwithPrivateKey(privateKey,nonce)
         conn.sendall(nounceSigned)
         
         if(conn.recv(1024).decode()!="OK"):
@@ -134,7 +148,8 @@ def receiveMessage(connection:socket,PublicKeyClient,privateKey):
         connection.settimeout(None)
         return plaintext,derived_key
     
-    except Exception:
+    except Exception as e: 
+        print(e)
         connection.close()
         return None
 
@@ -175,7 +190,7 @@ def ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,priv
     )
     signedPublicKey = signwithPrivateKey(privateKey,public_key)
 
-    # Receive the client's public key signed with PEIVATE Key that match priviously send PublickeY
+    # Receive the client's public key signed with PRIVATE Key that match priviously send PublickeY
     hasedMessage = pickle.loads(connection.recv(5000))
     
     #Verify Hash

@@ -12,7 +12,7 @@ Project done with python
 
 # TODO
 
-- Add more needed verifications like time part of message DH 
+- Unilateral auth store
 - testing 
 
 

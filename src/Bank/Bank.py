@@ -53,6 +53,7 @@ def main(argv:list[str]):
             result = receiveNewConnection(socket,privateKey)
             if result == None:
                 print("protocol_error\n")
+                continue
             else:
                 (conn,addr,account,PublicKeyClient) = result
                 x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey,account,PublicKeyClient))
@@ -120,7 +121,6 @@ def new_threaded_client(conn,lock,privateKey,account,PublicKeyClient):
         error_response(privateKey, conn, derived_key)
         return
     
-    #print(message)
 
     if "account" in message:
         if message["account"] != account:

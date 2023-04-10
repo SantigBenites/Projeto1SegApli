@@ -12,46 +12,48 @@ def createSocket(host="127.0.0.1"):
 
 def receiveNewHash(s:socket.socket,message:str):
 
-
-    s.listen()
     try:
-        # Accept new bank connection
-        while True:
-            conn, addr = s.accept()
-            conn.settimeout(10)
+        s.listen()
+        s.settimeout(5)
+        try:
+            # Accept new bank connection
+            while True:
+                conn, addr = s.accept()
+                conn.settimeout(10)
 
-            # Obtain derived key from diffie hellman
-            derived_key = ServerModeDiffieHellman(conn)
-            if derived_key == None:
-                return None
+                # Obtain derived key from diffie hellman
+                derived_key = ServerModeDiffieHellman(conn)
+                if derived_key == None:
+                    return None
 
-            # Receive cyphertext
-            cipherText = conn.recv(5000)
-            # Separe iv and ciphertext
-            iv = cipherText[:AES.block_size]
-            ciphertext = cipherText[AES.block_size:]
+                # Receive cyphertext
+                cipherText = conn.recv(5000)
+                # Separe iv and ciphertext
+                iv = cipherText[:AES.block_size]
+                ciphertext = cipherText[AES.block_size:]
 
-            #Setup decryption and unpadding
-            cipher = AES.new(derived_key, AES.MODE_CFB,iv)
-            receivedMessage = cipher.decrypt(ciphertext)
-
-            receivedHash = pickle.loads(receivedMessage)["hashFile"]
-            print(receivedHash)
-
-            originalHah =  hashlib.sha256(message).hexdigest()
-            print(originalHah)
-            if receivedHash == originalHah:
-                # Send ok to bank
                 #Setup decryption and unpadding
-                iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
-                cipher = AES.new(key=derived_key, mode=AES.MODE_CFB, iv=iv)
-                cipherText = iv + cipher.encrypt("OK".encode("utf-8"))
-                conn.sendall(cipherText)
-                conn.close()
+                cipher = AES.new(derived_key, AES.MODE_CFB,iv)
+                receivedMessage = cipher.decrypt(ciphertext)
 
-                return "ok"
-    except Exception:
-        conn.close()
+                receivedHash = pickle.loads(receivedMessage)["hashFile"]
+
+                originalHah =  hashlib.sha256(message).hexdigest()
+                if receivedHash == originalHah:
+                    # Send ok to bank
+                    #Setup decryption and unpadding
+                    iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
+                    cipher = AES.new(key=derived_key, mode=AES.MODE_CFB, iv=iv)
+                    cipherText = iv + cipher.encrypt("OK".encode("utf-8"))
+                    conn.sendall(cipherText)
+                    conn.close()
+
+                    return "ok"
+        except Exception as e:
+            conn.close()
+            return None
+    except Exception as e:
+        s.close()
         return None
 
 def ServerModeDiffieHellman(connection):

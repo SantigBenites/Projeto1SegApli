@@ -562,6 +562,7 @@ def withdrawMode(argv:list[str]):
     # Send receive message to Store
     messageEncode = sendMessageToStore(ipStoreAddress,stPort,withdrawCard,socket)
     
+    
     if messageEncode == None:
         print("protocol_error")
         return 63

@@ -40,3 +40,4 @@ src/temp.py
 # Ignore enviroment
 segApli
 segApli/*
+.vscode/launch.json
