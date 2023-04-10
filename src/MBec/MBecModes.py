@@ -8,8 +8,6 @@ from MBecConnection import *
 from MBecServerMode import *
 
 current_working_directory = os.getcwd()
-global lastUsedAccount
-lastUsedAccount = None
 
 def newAccountMode(argv:list[str]):
 
@@ -121,6 +119,7 @@ def newAccountMode(argv:list[str]):
     if "account" not in returnMessage or "initial_balance" not in returnMessage:
         return 130
     
+    global lastUsedAccount
     lastUsedAccount = account
     uploadPrivateKeyToFile(privateKey,pathUserFile)
     return returnMessage
@@ -238,6 +237,7 @@ def depositMode(argv:list[str]):
     if "account" not in receivedMessage or "deposit" not in  receivedMessage:
         return 130
     
+    global lastUsedAccount
     lastUsedAccount = account
     return receivedMessage
 
@@ -387,6 +387,7 @@ def createCardMode(argv:list[str]):
     file.write(contentFile)
     file.close()
     
+    global lastUsedAccount
     lastUsedAccount = account
     return returnMessage
 
@@ -463,6 +464,7 @@ def getBalanceMode(argv:list[str]):
     if "account"  not in receivedMessage or "balance" not in receivedMessage:
         return 130
     
+    global lastUsedAccount
     lastUsedAccount = account
     return receivedMessage
 
@@ -478,6 +480,7 @@ def withdrawMode(argv:list[str]):
     stPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 5000
 
     # Verify the virtual credit card file
+    global lastUsedAccount
     if "-v" in argv:
         virtualCreditCardFile = argv[argv.index("-v")+1]
     else:
@@ -494,7 +497,7 @@ def withdrawMode(argv:list[str]):
             bestCards = [x for x in files if re.search(f"^.+_{maxValue}\.card$",x)]
             virtualCreditCardFile = bestCards[0]
     
-
+    print(f"using card{virtualCreditCardFile}")
     # 
     if "-m" in argv:
         shoppingValue = argv[argv.index("-m")+1]
@@ -506,10 +509,6 @@ def withdrawMode(argv:list[str]):
         argsAreValidPort(stPort) and 
         argsAreValidBalances(shoppingValue) and
         argsAreValidFileNames(virtualCreditCardFile)):
-            print(argsAreValidIPv4(ipStoreAddress))
-            print(argsAreValidPort(stPort))
-            print(argsAreValidBalances(shoppingValue))
-            print(argsAreValidFileNames(virtualCreditCardFile))
             return 130
         
     # Verify if shoppingValue is float

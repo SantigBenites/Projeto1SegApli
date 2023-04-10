@@ -14,8 +14,8 @@ def main(argv: list[str]):
     if argv == None or argv == 130:
         sys.exit(125)
 
-    portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
-    stPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 3000
+    portStr = argv[argv.index("-p")+1] if "-p" in argv else 5000
+    stPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 5000
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
 
     if not(

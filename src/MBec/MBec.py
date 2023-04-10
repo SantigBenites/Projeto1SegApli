@@ -2,6 +2,9 @@ import socket, sys, getopt, signal
 from utils import *
 from MBecModes import newAccountMode, depositMode, createCardMode, getBalanceMode, withdrawMode
 
+global lastUsedAccount
+lastUsedAccount = None
+
 def main(args):
 
     try:
