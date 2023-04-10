@@ -45,9 +45,10 @@ def argsAreValidBalances(string:str):
 
 def argsAreValidFileNames(str:str):
     validSize = 1 < len(str) < 127
-    validChars = True if re.search("[_\-\.0-9a-z]+\.[_\-\.0-9a-z]+",str) else False
+    validChars = True if re.search("[\_\-\.0-9a-z]+",str) else False
     notDots = str != "." and str != ".."
-    return validSize and validChars and notDots
+    singleMatch = len(re.findall("[\_\-\.0-9a-z]+",str)) == 1
+    return validSize and validChars and notDots and singleMatch
 
 def argsAreValidAccountNames(str:str):
     validSize = 1 < len(str) < 127
