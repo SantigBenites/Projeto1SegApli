@@ -37,7 +37,7 @@ def receiveNewConnection(socket:socket.socket):
 def receiveMessage(connection:socket):
         
     try:
-        connection.settimeout(3)
+        connection.settimeout(10)
         #Get EECDF shared secret
         derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection)
         
@@ -66,7 +66,7 @@ def receiveMessage(connection:socket):
 def sendMessage(connection:socket,data,derived_key):
     
     try:
-        connection.settimeout(3)
+        connection.settimeout(10)
         hashedMessage = hashMessage(data)
 
         #Setup encryption and unpadding
@@ -102,7 +102,7 @@ def sendMessageToBank(destIP:str, destPort:int, message: str,publicKeyBank,priva
             
             # Start Connection
             s.connect((destIP, destPort))
-            s.settimeout(3)
+            s.settimeout(10)
 
             pem = publicKey.public_bytes(
                 encoding=serialization.Encoding.PEM,

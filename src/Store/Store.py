@@ -4,21 +4,31 @@ import pickle
 import socket
 import sys
 from StoreConnection import *
+from utils import *
 
 
 current_working_directory = os.getcwd()
 def main(argv: list[str]):
     
+    argv = stringToArgs("".join(argv))
+    if argv == None or argv == 130:
+        sys.exit(125)
 
-    stPort = int(argv[argv.index("-p") + 1]) if "-p" in argv else 5000
+    portStr = argv[argv.index("-p")+1] if "-p" in argv else 5000
+    stPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 5000
     authFile = argv[argv.index("-s") + 1] if "-s" in argv else "bank.auth"
+
+    if not(
+        argsAreValidPort(stPort) and
+        argsAreValidFileNames(authFile)):
+            sys.exit(125)
 
     socket = createSocket(port=stPort)
     
     pathAuthFile =f"{current_working_directory}/src/Store/{authFile}"
     
     if  not os.path.isfile(pathAuthFile):
-        return 130
+        return sys.exit(135)
     
     publicKeyBank = getPublicKeyFromCertFile(pathAuthFile)
     
@@ -165,7 +175,7 @@ def main(argv: list[str]):
 
     
     except KeyboardInterrupt:
-        sys.exit()
+        sys.exit(0)
     
 if __name__ == "__main__":
    main(sys.argv[1:])

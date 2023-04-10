@@ -46,6 +46,9 @@ def stringToArgs(argsString:str):
             else:
                 args[-1] += char
 
+    if len(args) != len(set(args)):
+        return 130
+
     return args
 
 def argsAreValidIntegers(str:str):

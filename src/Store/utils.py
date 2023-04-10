@@ -5,7 +5,6 @@ def safe_execute(default, exception, function, *args):
         return function(*args)
     except exception:
         return default
-    
 
 def stringToArgs(argsString:str):
 
@@ -34,7 +33,6 @@ def stringToArgs(argsString:str):
 
     return args
 
-
 def argsAreValidIntegers(str:str):
     return True if re.search("^[1-9]+$", str) else False
         
@@ -62,10 +60,3 @@ def argsAreValidIPv4(str:str):
 
 def argsAreValidPort(port:int):
     return 1024 < port < 65535
-
-def pad(s):
-    BS = 16
-    return s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
-
-def unpad(s):
-    return s[:-ord(s[len(s)-1:])]

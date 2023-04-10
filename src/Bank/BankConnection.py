@@ -37,7 +37,7 @@ def receiveNewConnection(s:socket.socket,privateKey):
         s.listen()
         
         conn, addr = s.accept()
-        conn.settimeout(3)
+        conn.settimeout(10)
         
         #recebe {account,chavepublica}
         received = conn.recv(5000)
@@ -114,7 +114,7 @@ def receiveNewConnection(s:socket.socket,privateKey):
 def receiveMessage(connection:socket,PublicKeyClient,privateKey):
 
     try:
-        connection.settimeout(3)
+        connection.settimeout(10)
         #Get EECDF shared secret
         derived_key = ephemeralEllipticCurveDiffieHellmanReceiving(connection,PublicKeyClient,privateKey)
 

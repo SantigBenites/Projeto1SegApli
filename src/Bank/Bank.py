@@ -17,19 +17,25 @@ def main(argv:list[str]):
     # Signals
     #signal.signal(signal.SIGINT, exit)
     argv = stringToArgs("".join(argv))
+    if argv == None or argv == 130:
+        sys.exit(125)
 
     # Processing Arguments
     portStr = argv[argv.index("-p")+1] if "-p" in argv else 3000
     portNumber = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 3000
     authFile = argv[argv.index("-s")+1] if "-s" in argv else "bank.auth"
-    socket = createSocket(port=portNumber)
     
     current_working_directory = os.getcwd()
+
+    if not(
+        argsAreValidPort(portNumber) and
+        argsAreValidFileNames(authFile)):
+            sys.exit(125)
     
     if os.path.isfile(f"{current_working_directory}/src/Bank/auth/{authFile}"):
-        sys.exit()
+        sys.exit(125)
         
-    
+    socket = createSocket(port=portNumber)
     
     privateKey = getPrivateKey()
     cert = generateSelfSignedCert(privateKey, f"{current_working_directory}/src/Bank/auth/{authFile}")
@@ -46,7 +52,7 @@ def main(argv:list[str]):
             
             result = receiveNewConnection(socket,privateKey)
             if result == None:
-                print("protocol_error")
+                print("protocol_error\n")
             else:
                 (conn,addr,account,PublicKeyClient) = result
                 x = threading.Thread(target=new_threaded_client, args=(conn,lock,privateKey,account,PublicKeyClient))
@@ -75,7 +81,7 @@ def main(argv:list[str]):
         # Close socket
         socket.close()
 
-        sys.exit()
+        sys.exit(0)
 
 def error_response(privateKey, conn, derived_key):
     response  = json.dumps({"Error":130}).encode('utf8')
