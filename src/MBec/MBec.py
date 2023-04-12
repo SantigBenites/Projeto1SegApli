@@ -35,6 +35,7 @@ def main(args):
                 return sys.exit(int(messageDict))
 
             print(messageDict)
+            sys.stdout.flush()
     except KeyboardInterrupt:
         return sys.exit(0)
     

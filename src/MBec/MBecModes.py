@@ -160,9 +160,6 @@ def depositMode(argv:list[str]):
         argsAreValidPort(bkPort) and 
         argsAreValidFileNames(authFile) and
         argsAreValidBalances(amount)):
-
-            print(amount)
-
             return 130
     
 
@@ -174,7 +171,6 @@ def depositMode(argv:list[str]):
 
     
     if(amount <= 0): 
-        print ("Invalid Amount") 
         return 130
         
     filePath = f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
@@ -205,7 +201,8 @@ def depositMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey)
     
     if messageEncode == None:
-        print("protocol_error")
+        print("protocol_error\n")
+        sys.stdout.flush()
         return 63
     
     hashedMessage = pickle.loads(messageEncode)
@@ -291,7 +288,6 @@ def createCardMode(argv:list[str]):
     # Check if user file already exists
     filePath = f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
     if not os.path.isfile(filePath):
-        print(f"Error num 130")
         return 130
     
     #checks the existence of authFile
@@ -323,7 +319,8 @@ def createCardMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,newCardMessage,privateKey,publicKeyBank,account,publicKey)
     
     if messageEncode == None:
-        print("protocol_error")
+        print("protocol_error\n")
+        sys.stdout.flush()
         return 63
     
     
@@ -452,7 +449,8 @@ def getBalanceMode(argv:list[str]):
     messageEncode = sendMessage(ipBankAddress,bkPort,m,privateKey,publicKeyBank,account,publicKey)
     
     if messageEncode == None:
-        print("protocol_error")
+        print("protocol_error\n")
+        sys.stdout.flush()
         return 63
     
     hashedMessage = pickle.loads(messageEncode)
@@ -564,7 +562,8 @@ def withdrawMode(argv:list[str]):
     
     
     if messageEncode == None:
-        print("protocol_error")
+        print("protocol_error\n")
+        sys.stdout.flush()
         return 63
     
     hashedMessage = pickle.loads(messageEncode)
@@ -596,7 +595,8 @@ def withdrawMode(argv:list[str]):
         return 130
 
     if "Error" in returnMessage:
-        print("protocol_error")
+        print("protocol_error\n")
+        sys.stdout.flush()
         return 63
 
     return returnMessage

@@ -149,7 +149,6 @@ def receiveMessage(connection:socket,PublicKeyClient,privateKey):
         return plaintext,derived_key
     
     except Exception as e: 
-        print(e)
         connection.close()
         return None
 

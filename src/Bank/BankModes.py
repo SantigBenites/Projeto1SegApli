@@ -30,7 +30,7 @@ def newAccountMode(signedMessage, message,PublicKeyUser):
             argsAreValidAccountNames(str(accountName)) and
             argsAreValidBalances(str(balance)) and
             verifyTimeStampValidity(timeStampClient)):
-                return json.dumps({"Error":130}).encode('utf8')
+                return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
 
     # Generating response
     newAccountResponse = json.dumps({

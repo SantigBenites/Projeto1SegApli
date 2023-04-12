@@ -86,12 +86,10 @@ def sendMessage(connection:socket,data,derived_key):
         plaintext = cipher.decrypt(ciphertext)
 
         if plaintext.decode() == "ok":
-            print("ok")
             return 1
         else:
             return None
     except Exception as e:
-        print(e)
         connection.close()
         return None
     

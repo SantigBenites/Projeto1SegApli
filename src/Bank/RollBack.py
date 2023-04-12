@@ -29,15 +29,18 @@ def rollBackNewAccountMode(signedMessage, message, PublicKeyUser):
     
     # Updating runtime database
     print(f"Before rollBack \n {storage.users} \n {storage.balances}")
+    sys.stdout.flush()
     storage.removeAccount(accountName,PublicKeyUser)
     storage.addAccountBalance(accountName,-balance)
     print(f"Before rollBack \n {storage.users} \n {storage.balances}")
+    sys.stdout.flush()
     return
 
 
 def rollBackDepositMode(signedMessage, message):
     
     print("Started Rollback")
+    sys.stdout.flush()
     if "account" not in message or "Amount" not in message or "timeStamp" not in message:
         return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
         
@@ -66,9 +69,11 @@ def rollBackDepositMode(signedMessage, message):
     if not verifySignature(PublicKeyUser,signedMessage["signature"],signedMessage["message"]):
         return json.dumps({"Error":63, "timeStamp": getTimeStamp()}).encode('utf8')
     
-    print(f"Before rollBack \n {storage.balances}")
+    print(f"Before rollBack \n {storage.balances}\n")
+    sys.stdout.flush()
     storage.addAccountBalance(account,-deposit)
-    print(f"After rollBack \n {storage.balances}")
+    print(f"After rollBack \n {storage.balances}\n")
+    sys.stdout.flush()
 
     return
 
@@ -107,9 +112,11 @@ def rollBackCreateCardMode(signedMessage, message):
     # Getting card name
     numberOfCardForAccount = storage.getCreditCardNumber(accountName)
     cardName = f"{accountName}_{numberOfCardForAccount}"
-    print(f"Before rollBack \n {storage.cards}")
+    print(f"Before rollBack \n {storage.cards}\n")
+    sys.stdout.flush()
     storage.removeCreditCard(accountName,f"{cardName}.card")
-    print(f"Before rollBack \n {storage.cards}")
+    print(f"Before rollBack \n {storage.cards}\n")
+    sys.stdout.flush()
     return
 
 
@@ -184,10 +191,12 @@ def rollBackWithdrawMode(signedMessage, message,privateKey,PublicKeyStore):
         return json.dumps({"Error":130,"timeStamp": getTimeStamp()}).encode('utf8')
 
     # Check if credit card as the required amount
-    print(f"Before rollBack \n {storage.cards} \n {storage.balances}")
+    print(f"Before rollBack \n {storage.cards} \n {storage.balances}\n")
+    sys.stdout.flush()
     storage.reactivateCreditCardAndUpdateBalance(account,vcc_file, amount+shoppingValue)
     storage.addAccountBalance(account,+shoppingValue)
-    print(f"Before rollBack \n {storage.cards} \n {storage.balances}")
+    print(f"Before rollBack \n {storage.cards} \n {storage.balances}\n")
+    sys.stdout.flush()
     
     return
 

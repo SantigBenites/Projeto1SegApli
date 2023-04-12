@@ -91,7 +91,8 @@ def main(argv: list[str]):
                     data = sendMessageToBank(fileContent["ip"],fileContent["port"],msg,publicKeyBank,privateKey,publicKey)
                     
                     if data == None:
-                        print("protocol_error")
+                        print("protocol_error\n")
+                        sys.stdout.flush()
                         sendMessage(conn,json.dumps({"Error": 63,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
@@ -121,17 +122,20 @@ def main(argv: list[str]):
                     
                     if "vcc_file" not in message or "vcc_amount_used" not in message or "timeStamp" not in message :
                         print(message)
+                        sys.stdout.flush()
                         sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
                     
                     if not verifyTimeStampValidity(message["timeStamp"]):
                         print(message)
+                        sys.stdout.flush()
                         sendMessage(conn,json.dumps({"Error": 130,"timeStamp": getTimeStamp()}).encode(),derived_key)
                         conn.close()
                         continue
                     
                     print(message)
+                    sys.stdout.flush()
                     
                     msg = json.dumps({"vcc_file": message["vcc_file"],
                                     "vcc_amount_used": message["vcc_amount_used"],
@@ -140,7 +144,8 @@ def main(argv: list[str]):
 
                     message = sendMessage(conn,msg,derived_key)
                     if message == None:
-                        print("protocol_errorClient")
+                        print("protocol_error\n")
+                        sys.stdout.flush()
 
                         message = pickle.dumps({"MessageType": "RollBack",
                                             "OriginalMessageType": "WithdrawCard",

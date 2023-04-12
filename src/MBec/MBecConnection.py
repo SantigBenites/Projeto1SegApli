@@ -171,7 +171,6 @@ def sendMessageToStore(destIP:str, destPort:int, message: str,BankSocket):
             return plaintext if Confirmation else None
         
     except Exception as e:
-        print(e)
         s.close()
         return None
         
