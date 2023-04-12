@@ -117,3 +117,6 @@ This is done in:
 VM -> Settings -> System -> Processor
 
 we were able to make it work with 4 cores
+
+Moreover we tested this program in both windows and linux therefore we believe we got it covered on this front.
+We tested in Windows11 and Debian Based distribution, so these are the systems we recommend you operate on.
