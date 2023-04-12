@@ -14,8 +14,12 @@ def stringToArgs(argsString:str):
     sanitized = argsString.replace(" ","")
     flagBool = False
     args = []
+    
+    if sanitized[0] != "-0":
+        return 130
 
     for char in sanitized:
+        print(char)
         if flagBool:
             args[-1] += char
             flagBool = False
