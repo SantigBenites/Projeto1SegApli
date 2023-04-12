@@ -2,7 +2,7 @@ from subprocess import *
 import sys, random, os
 fil = open("out.txt", "a")
 
-command = ["python", "src/MBec/MBec.py"]
+command = ["python3", "src/MBec/MBec.py"]
 
 try:
 

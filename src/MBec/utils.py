@@ -40,7 +40,7 @@ def stringToArgs(argsString:str):
         return 130
 
     for char in sanitized:
-        print(char)
+
         if flagBool:
             args[-1] += char
             flagBool = False

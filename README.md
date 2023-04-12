@@ -1,12 +1,11 @@
 # Projeto1SegApli
 
-TP21-G04 
+TP21-G04:
+- Santiago Benites fc54392 
+- Inês Morais fc54462
+- Mirguel Carvalho fc54399
 
-Santiago Benites fc54392
-Inˆes Morais fc54462
-Mirguel Carvalho fc54399
-
-Project done with python
+Project done with python3.10
 
 # Instalation
 
@@ -36,14 +35,25 @@ pip install cryptography
 
 If you are using an alternative package manager the best help I can give is to try to replace pip with your package manager, be it mamba/conda/other...
 
+## Directory Structure
+
+The required directories for the program to run will be :
+
+```
+directories = ["src/Bank","src/Bank/auth","src/MBec","src/MBec/creditCard","src/MBec/usersFiles","src/Store"]
+```
+
+If these do not exist the program wont work, we made the script setup/install.py to make sure that these exist, if they don't the script will create them.
+You must run this script and all other scripts from the root of the project, the directory that has src, setup and this README.
+
 # Running the program
 
 You probably received a specific file structure, please don't disturb it, as it is required from normal execution.
-In order to run either MBec or the Store the bank.auth file is required to be present in the root directory of both of these (take account that bank,auth is just the standard name of the file, it can change if you want to). 
+In order to run either MBec or the Store the bank.auth file is required to be present in the root directory of both of these (take into account that bank.auth is just the standard name of the file, it can change if you want to). 
 
 This means that bank.auth needs to be present in both src/MBec and src/Store so that the store and the MBec can run, if this is not true they will not start and both the program will instantly exit.
 
-To run programs the required commands are
+To run programs the required commands are, you must run all program from the root of the project.
 
 ```
 python3 src/Bank/Bank.py [-p <bk-port>] [-s <auth-file>]
@@ -95,5 +105,13 @@ Moreover in line 142 to 146 of Cripto.py you will find commented
 #with open(f"{os.getcwd()}/src/Store/bank.auth","wb") as f:
 #    f.write(cert.public_bytes(serialization.Encoding.PEM))
 ```
-Which are 4 lines which instaly copy the bank.auth file from the client to the server without the need to copy it manually.
+Which are 4 lines which instantly copy the bank.auth file from the client to the server without the need to copy it manually.
 Just like the case above we left commented in case you don´t want to use it.
+
+When testing we found ourselves having problem when using the classes VM to run our project specifically the sockets would timeout whenever we tried to make communications, to solve this problem we increased the number of cores in VM.
+
+This is done in:
+
+VM -> Settings -> System -> Processor
+
+we were able to make it work with 4 cores

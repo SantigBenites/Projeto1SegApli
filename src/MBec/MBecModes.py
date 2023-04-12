@@ -508,7 +508,6 @@ def withdrawMode(argv:list[str]):
         bestCards = [x for x in files if re.search(f"^.+_{maxValue}\.card$",x)]
         virtualCreditCardFile = bestCards[0]
     
-    print(f"using card{virtualCreditCardFile}")
     # 
     if "-m" in argv:
         shoppingValue = argv[argv.index("-m")+1]

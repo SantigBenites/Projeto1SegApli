@@ -5,7 +5,7 @@ fil = open("out.txt", "a")
 randomPort = False
 standartAuthFile = True
 
-command = ["python", "src/Bank/Bank.py"]
+command = ["python3", "src/Bank/Bank.py"]
 
 if randomPort:
     port = random.randrange(10000, 65535)
@@ -24,9 +24,11 @@ except KeyboardInterrupt:
     os.remove(f"{os.getcwd()}/src/Bank/auth/bank.auth")
     print(f"{os.getcwd()}/src/Bank/auth/bank.auth was removed")
 
+if os.path.isfile(f"{os.getcwd()}/src/Store/bank.auth"):
     os.remove(f"{os.getcwd()}/src/Store/bank.auth")
     print(f"{os.getcwd()}/src/Store/bank.auth was removed")
 
+if os.path.isfile(f"{os.getcwd()}/src/MBec/bank.auth was removed"):
     os.remove(f"{os.getcwd()}/src/MBec/bank.auth")
     print(f"{os.getcwd()}/src/MBec/bank.auth was removed")
     

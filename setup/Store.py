@@ -5,7 +5,7 @@ fil = open("out.txt", "a")
 randomPort = False
 standartAuthFile = True
 
-command = ["python", "src/Store/Store.py"]
+command = ["python3", "src/Store/Store.py"]
 
 if randomPort:
     port = random.randrange(10000, 65535)
