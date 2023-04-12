@@ -18,7 +18,9 @@ If you don't just follow one of the tutorials online, but take into account we w
 
 Moreover we recommend the usage of a package manager like conda or mamba, if any are installed it can simplify the process.
 
-But it is not required in our tutorial, if you do have a package manager installed you can just follow the tutorial we will give little warning wherever your path might deviate from the normal installation
+But it is not required in our tutorial, if you do have a package manager installed you can just follow the tutorial we will give little warning wherever your path might deviate from the normal installation.
+
+Take into account all our scripts were done with python you system may need python3, if so just change the scripts to this effect.
 
 ## Required packages
 
