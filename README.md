@@ -2,42 +2,11 @@
 
 TP21-G04 
 
-Santiago Benites
-Inês Martins 
-Miguel Carvalho 
-
-https://github.com/SantigBenites/Projeto1SegApli
+Santiago Benites fc54392
+Inˆes Morais fc54462
+Mirguel Carvalho fc54399
 
 Project done with python
-
-# TODO
-
-- Unilateral auth store
-- testing 
-- Remove testing features (prints, Bank passing files to MBec and Store automatically, clearUserFiles script)
-
-
-# Git commands
-
-## Starting the repo
-```
-echo "# Projeto1SegApli" >> README.md
-git init
-git add README.md
-git commit -m "first commit"
-git branch -M main
-git remote add origin git@github.com:SantigBenites/Projeto1SegApli.git
-git push -u origin main
-```
-
-## Commiting to repo
-
-```
-git pull origin main (careful with pulling over non committed work)
-git add -A
-git commit -m "message"
-git push origin main
-```
 
 # Instalation
 
@@ -54,7 +23,7 @@ But it is not required in our tutorial, if you do have a package manager install
 
 ## Required packages
 
-The installation will require some packages, these can be found in the setup folder under the requirements.txt
+The installation will require some packages, these can be installed with the pip package manager using install.sh in setup directory
 
 In another note if you prefer it can be simpler to just run the pip install commands from you current python installation
 
@@ -72,7 +41,7 @@ If you are using an alternative package manager the best help I can give is to t
 You probably received a specific file structure, please don't disturb it, as it is required from normal execution.
 In order to run either MBec or the Store the bank.auth file is required to be present in the root directory of both of these (take account that bank,auth is just the standard name of the file, it can change if you want to). 
 
-This means that bank.auth needs to be present in both src/MBec and src/Store so that the store and the MBec can run, if this is not true they will not  start and both the program will instantly exit.
+This means that bank.auth needs to be present in both src/MBec and src/Store so that the store and the MBec can run, if this is not true they will not start and both the program will instantly exit.
 
 To run programs the required commands are
 
@@ -99,12 +68,32 @@ In these declarations, the order of the input doesn't matter, nor does if the in
 
 Therefore the following commands do the same thing
 ```
-python3 src/MBec/MBec.py
+python3 src/MBec/MBec.py (run the program with enter)
 -a5000-n123.00
 
-python3 src/MBec/MBec.py
+python3 src/MBec/MBec.py (run the program with enter)
 -a 5000 -n 123.00
 ```
 Take into account that all values should follow the project's directives, therefore a monetary value should be presented with its decimals, separated by a dot, if 123.00 were to be exchanged with 123, the program would not accept it.
 
-Command will be taken from the stdin, and cannot exceed 4096 characters
+Command will be taken from the stdin, and cannot exceed 4096 characters.
+Take into account no state is passed between executions of the MBec, the while loop is just done for ease of access.
+So that you don't have to recall the program from the command line, we don't recommend taking it out because it requires some small changes, but if you really want to do it we can provide some help.
+
+# Final considerations
+
+In line 74 of bank you will find commented a script run that will delete all temporary files from the project, we will leave it commented in case you don´t want to use it.
+```
+#call(["python", "src/clearUserFiles.py"])
+```
+
+Moreover in line 142 to 146 of Cripto.py you will find commented
+```
+#with open(f"{os.getcwd()}/src/MBec/bank.auth","wb") as f:
+#    f.write(cert.public_bytes(serialization.Encoding.PEM))
+
+#with open(f"{os.getcwd()}/src/Store/bank.auth","wb") as f:
+#    f.write(cert.public_bytes(serialization.Encoding.PEM))
+```
+Which are 4 lines which instaly copy the bank.auth file from the client to the server without the need to copy it manually.
+Just like the case above we left commented in case you don´t want to use it.

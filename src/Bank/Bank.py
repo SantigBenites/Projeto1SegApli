@@ -71,7 +71,7 @@ def main(argv:list[str]):
         sys.stdout.flush()
         
         # Removing userFiles automatically, to remove in final version
-        call(["python", "src/clearUserFiles.py"])
+        #call(["python", "src/clearUserFiles.py"])
 
         # Joining threads
         for thr in threads:

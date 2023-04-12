@@ -139,11 +139,11 @@ def generateSelfSignedCert(privateKey, path:str):
     with open(path, "wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
 
-    with open(f"{os.getcwd()}/src/MBec/bank.auth","wb") as f:
-        f.write(cert.public_bytes(serialization.Encoding.PEM))
+    #with open(f"{os.getcwd()}/src/MBec/bank.auth","wb") as f:
+    #    f.write(cert.public_bytes(serialization.Encoding.PEM))
 
-    with open(f"{os.getcwd()}/src/Store/bank.auth","wb") as f:
-        f.write(cert.public_bytes(serialization.Encoding.PEM))
+    #with open(f"{os.getcwd()}/src/Store/bank.auth","wb") as f:
+    #    f.write(cert.public_bytes(serialization.Encoding.PEM))
         
     return cert
     
