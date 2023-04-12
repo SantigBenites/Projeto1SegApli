@@ -492,22 +492,21 @@ def withdrawMode(argv:list[str]):
     stPort = int(portStr) if safe_execute("error",TypeError,int,portStr) != "error" else 5000
 
     # Verify the virtual credit card file
+    files = os.listdir(f"{current_working_directory}/src/MBec/creditCard")
     global lastUsedAccount
     if "-v" in argv:
         virtualCreditCardFile = argv[argv.index("-v")+1]
+    elif 'lastUsedAccount' in locals():
+        # We have the last used account
+        valid_withUsedAccount = [x for x in files if re.search(f"{lastUsedAccount}_\d\.card$",x)]
+        maxValue = max([int((re.search("_\d", cardNumber)[0])[1]) for cardNumber in valid_withUsedAccount])
+        virtualCreditCardFile = f"{lastUsedAccount}_{maxValue}.card"
     else:
-        files = os.listdir(f"{current_working_directory}/src/MBec/creditCard")
-        if lastUsedAccount != None:
-            # We have the last used account
-            valid_withUsedAccount = [x for x in files if re.search(f"{lastUsedAccount}_\d\.card$",x)]
-            maxValue = max([int((re.search("_\d", cardNumber)[0])[1]) for cardNumber in valid_withUsedAccount])
-            virtualCreditCardFile = f"{lastUsedAccount}_{maxValue}.card"
-        else:
-            # We dont have the last used account
-            valid_withAnyAccount = [x for x in files if re.search("^.+_\d\.card$",x)]
-            maxValue = max([int((re.search("_\d", cardNumber)[0])[1]) for cardNumber in valid_withAnyAccount])
-            bestCards = [x for x in files if re.search(f"^.+_{maxValue}\.card$",x)]
-            virtualCreditCardFile = bestCards[0]
+        # We dont have the last used account
+        valid_withAnyAccount = [x for x in files if re.search("^.+_\d\.card$",x)]
+        maxValue = max([int((re.search("_\d", cardNumber)[0])[1]) for cardNumber in valid_withAnyAccount])
+        bestCards = [x for x in files if re.search(f"^.+_{maxValue}\.card$",x)]
+        virtualCreditCardFile = bestCards[0]
     
     print(f"using card{virtualCreditCardFile}")
     # 

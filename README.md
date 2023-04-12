@@ -14,6 +14,7 @@ Project done with python
 
 - Unilateral auth store
 - testing 
+- Remove testing features (prints, Bank passing files to MBec and Store automatically, clearUserFiles script)
 
 
 # Git commands
