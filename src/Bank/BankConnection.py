@@ -248,6 +248,8 @@ def ClientMode(ip:str,port:int,hashFile):
                 s.connect((ip,port))
             except socket.error:
                 return None
+            s.settimeout(10)
+            
             # Do the diffie Hellman
             derived_key = ClientModeDiffieHellman(s)
 

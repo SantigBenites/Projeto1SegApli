@@ -256,7 +256,6 @@ def withdrawMode(signedMessage, message,privateKey,PublicKeyStore):
 
     # Check if the client socket timed out
     if clientResponse == None:
-        print("protocol_errorClientResponse")
         return json.dumps({"Error":63,"timeStamp": getTimeStamp()}).encode('utf8') 
 
     # Check if credit card as the required amount

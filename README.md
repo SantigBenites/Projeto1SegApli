@@ -90,7 +90,7 @@ Take into account that all values should follow the project's directives, theref
 
 Command will be taken from the stdin, and cannot exceed 4096 characters.
 Take into account no state is passed between executions of the MBec, the while loop is just done for ease of access.
-So that you don't have to recall the program from the command line, we don't recommend taking it out because it requires some small changes, but if you really want to do it we can provide some help.
+So that you don't have to recall the program from the command line, we don't recommend taking it out because it requires some small changes.
 
 # Final considerations
 
