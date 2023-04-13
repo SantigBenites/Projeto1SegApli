@@ -50,6 +50,15 @@ You must run this script and all other scripts from the root of the project, the
 
 # Running the program
 
+You can run the project in 2 ways
+
+- Commands
+- Setup files
+
+we recommend the first one but the latter is simpler
+
+## Running using Commands
+
 You probably received a specific file structure, please don't disturb it, as it is required from normal execution.
 In order to run either MBec or the Store the bank.auth file is required to be present in the root directory of both of these (take into account that bank.auth is just the standard name of the file, it can change if you want to). 
 
@@ -91,6 +100,21 @@ Take into account that all values should follow the project's directives, theref
 Command will be taken from the stdin, and cannot exceed 4096 characters.
 Take into account no state is passed between executions of the MBec, the while loop is just done for ease of access.
 So that you don't have to recall the program from the command line, we don't recommend taking it out because it requires some small changes.
+
+## Running using setup files
+
+```
+python3 setup/Bank.py
+
+python3 setup/Store.py
+
+python3 src/MBec/MBec.py (run the program with enter)
+-a 5000 -n 123.00
+```
+
+Take into account that these scripts only run the commands we referenced above, and automatically move some files around, we recommend you just run the commands as specified above.
+
+Regarding the "moving the files around" in the next section we give some "quality of life" improvements for this area, if you do use the setup files just take into account they are not 100% stress proof.
 
 # Final considerations
 
