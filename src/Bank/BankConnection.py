@@ -156,6 +156,7 @@ def sendMessage(connection:socket,data,derived_key):
 
     try:
         #Setup decryption and unpadding
+        connection.settimeout(10)
         iv = AES.new(key=derived_key, mode=AES.MODE_CFB).iv
         cipher = AES.new(key=derived_key, mode=AES.MODE_CFB, iv=iv)
         cipherText = iv + cipher.encrypt(data)
