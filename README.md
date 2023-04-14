@@ -7,7 +7,7 @@ Segurança Aplicada
 TP21-G04:
 - Santiago Benites fc54392 
 - Inês Morais fc54462
-- Mirguel Carvalho fc54399
+- Miguel Carvalho fc54399
 
 Project done with python3.10
 
