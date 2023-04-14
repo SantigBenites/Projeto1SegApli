@@ -22,7 +22,7 @@ Moreover we recommend the usage of a package manager like conda or mamba, if any
 
 But it is not required in our tutorial, if you do have a package manager installed you can just follow the tutorial we will give little warning wherever your path might deviate from the normal installation.
 
-Take into account all our scripts were done with python you system may need python3, if so just change the scripts to this effect.
+Take into account all our scripts were done with python your system may need python3, if so just change the scripts to this effect.
 
 ## Required packages
 
@@ -80,11 +80,11 @@ When the required programs are run, MBec will now be able to take in input from 
 The input should be in the forms present in the project description
 
 ```
-mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -n <balance>
-mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -d <amount>
-mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -c <amount>
-mbec [-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -g
-mbec [-i <ip-store-address>] [-p <st-port>] [-v <virtual-credit-card-file>] -m <shopping-value>
+[-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -n <balance>
+[-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -d <amount>
+[-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -c <amount>
+[-s <auth-file>] [-i <ip-bank-address>] [-p <bk-port>] [-u <user-file>] -a <account> -g
+[-i <ip-store-address>] [-p <st-port>] [-v <virtual-credit-card-file>] -m <shopping-value>
 ```
 
 In these declarations, the order of the input doesn't matter, nor does if the input has spaces between them.
@@ -125,7 +125,7 @@ In line 74 of bank you will find commented a script run that will delete all tem
 #call(["python", "src/clearUserFiles.py"])
 ```
 
-Moreover in line 142 to 146 of Cripto.py you will find commented
+Moreover in line 142 to 146 of Cripto.py in the Bank folder you will find commented
 ```
 #with open(f"{os.getcwd()}/src/MBec/bank.auth","wb") as f:
 #    f.write(cert.public_bytes(serialization.Encoding.PEM))
@@ -134,7 +134,7 @@ Moreover in line 142 to 146 of Cripto.py you will find commented
 #    f.write(cert.public_bytes(serialization.Encoding.PEM))
 ```
 Which are 4 lines which instantly copy the bank.auth file from the client to the server without the need to copy it manually.
-Just like the case above we left commented in case you don´t want to use it.
+Just like the case above we left commented in case you don't want to use it.
 
 When testing we found ourselves having problem when using the classes VM to run our project specifically the sockets would timeout whenever we tried to make communications, to solve this problem we increased the number of cores in VM.
 
