@@ -175,7 +175,6 @@ def depositMode(argv:list[str]):
         
     filePath = f"{current_working_directory}/src/MBec/usersFiles/{userFile}"
     if not os.path.isfile(filePath):
-        print(f"Error num 130")
         return 130
     
     #checks the existence of authFile
